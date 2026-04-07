@@ -1,0 +1,35 @@
+# Godot 4+ specific ignores
+.godot/
+
+# Godot-specific ignores
+*.translation
+
+# Imported textures and samples
+.import/
+
+# Mono-specific ignores
+.mono/
+data_*/
+mono_crash.*.json
+
+# System/Editors
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Builds
+*.exe
+*.x86_64
+*.pck
+*.apk
+*.aab
+
+# Export presets can contain sensitive info - uncomment if needed
+# export_presets.cfg

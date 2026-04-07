@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://planet_scene"]
+
+[ext_resource type="Script" path="res://scripts/bodies/Planet.gd" id="1_planet"]
+
+[node name="Planet" type="Node2D"]
+script = ExtResource("1_planet")
+body_name = "Planet"
+display_color = Color(0.3, 0.5, 0.8, 1)
+min_display_radius = 8.0
+max_display_radius = 40.0

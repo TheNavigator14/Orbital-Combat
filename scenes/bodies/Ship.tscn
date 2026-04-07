@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://ship_scene"]
+
+[ext_resource type="Script" path="res://scripts/ship/Ship.gd" id="1_ship"]
+
+[node name="Ship" type="Node2D"]
+script = ExtResource("1_ship")
+ship_name = "Player Ship"
+max_thrust = 100000.0
+exhaust_velocity = 3500.0
+dry_mass = 10000.0
+fuel_capacity = 20000.0

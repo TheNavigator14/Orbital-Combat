@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://sun_scene"]
+
+[ext_resource type="Script" path="res://scripts/bodies/Sun.gd" id="1_sun"]
+
+[node name="Sun" type="Node2D"]
+script = ExtResource("1_sun")
+body_name = "Sun"
+display_color = Color(1, 0.9, 0.6, 1)
+min_display_radius = 15.0
+max_display_radius = 50.0

@@ -1,0 +1,46 @@
+[gd_scene load_steps=5 format=3 uid="uid://main_scene"]
+
+[ext_resource type="Script" path="res://scripts/Main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/SolarSystem.tscn" id="2_solar"]
+[ext_resource type="Script" path="res://scripts/camera/OrbitalCamera.gd" id="4_camera"]
+[ext_resource type="Script" path="res://scripts/ui/tactical/TacticalDisplay.gd" id="5_tactical"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="SolarSystem" parent="." instance=ExtResource("2_solar")]
+
+[node name="OrbitalCamera" type="Camera2D" parent="."]
+script = ExtResource("4_camera")
+zoom_speed = 0.15
+smooth_zoom = true
+smooth_pan = true
+smoothing_speed = 8.0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="TacticalDisplay" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("5_tactical")
+
+[node name="ControlsLabel" type="Label" parent="CanvasLayer"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = -120.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "W/S - Prograde/Retrograde
+A/D - Radial In/Out
+,/. - Time warp
+Scroll - Zoom
+M - Toggle focus"
+horizontal_alignment = 2

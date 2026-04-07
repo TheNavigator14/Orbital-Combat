@@ -1,0 +1,109 @@
+[gd_scene load_steps=3 format=3 uid="uid://bxk7q8r2m5e1c"]
+
+[ext_resource type="Script" path="res://scripts/bodies/Sun.gd" id="1_sun"]
+[ext_resource type="Script" path="res://scripts/bodies/Planet.gd" id="2_planet"]
+
+[node name="SolarSystem" type="Node2D"]
+
+[node name="Sun" type="Node2D" parent="."]
+script = ExtResource("1_sun")
+body_name = "Sun"
+display_color = Color(1, 0.9, 0.6, 1)
+min_display_radius = 15.0
+max_display_radius = 50.0
+
+[node name="Mercury" type="Node2D" parent="."]
+script = ExtResource("2_planet")
+body_name = "Mercury"
+mass = 3.301e+23
+radius = 2440000.0
+display_color = Color(0.6, 0.6, 0.6, 1)
+min_display_radius = 4.0
+max_display_radius = 15.0
+orbital_radius = 57909050000.0
+orbital_eccentricity = 0.206
+start_true_anomaly = 0.0
+
+[node name="Venus" type="Node2D" parent="."]
+script = ExtResource("2_planet")
+body_name = "Venus"
+mass = 4.867e+24
+radius = 6052000.0
+display_color = Color(0.9, 0.7, 0.3, 1)
+min_display_radius = 6.0
+max_display_radius = 20.0
+orbital_radius = 108208000000.0
+orbital_eccentricity = 0.007
+start_true_anomaly = 0.8
+
+[node name="Earth" type="Node2D" parent="."]
+script = ExtResource("2_planet")
+body_name = "Earth"
+mass = 5.972e+24
+radius = 6371000.0
+display_color = Color(0.2, 0.5, 0.9, 1)
+min_display_radius = 6.0
+max_display_radius = 20.0
+orbital_radius = 149597870700.0
+orbital_eccentricity = 0.017
+start_true_anomaly = 1.6
+
+[node name="Mars" type="Node2D" parent="."]
+script = ExtResource("2_planet")
+body_name = "Mars"
+mass = 6.417e+23
+radius = 3390000.0
+display_color = Color(0.85, 0.35, 0.2, 1)
+min_display_radius = 5.0
+max_display_radius = 18.0
+orbital_radius = 227939200000.0
+orbital_eccentricity = 0.093
+start_true_anomaly = 2.4
+
+[node name="Jupiter" type="Node2D" parent="."]
+script = ExtResource("2_planet")
+body_name = "Jupiter"
+mass = 1.898e+27
+radius = 69911000.0
+display_color = Color(0.85, 0.65, 0.45, 1)
+min_display_radius = 10.0
+max_display_radius = 35.0
+orbital_radius = 778570000000.0
+orbital_eccentricity = 0.049
+start_true_anomaly = 3.2
+
+[node name="Saturn" type="Node2D" parent="."]
+script = ExtResource("2_planet")
+body_name = "Saturn"
+mass = 5.683e+26
+radius = 58232000.0
+display_color = Color(0.9, 0.8, 0.5, 1)
+min_display_radius = 9.0
+max_display_radius = 32.0
+orbital_radius = 1433530000000.0
+orbital_eccentricity = 0.054
+start_true_anomaly = 4.0
+
+[node name="Uranus" type="Node2D" parent="."]
+script = ExtResource("2_planet")
+body_name = "Uranus"
+mass = 8.681e+25
+radius = 25362000.0
+display_color = Color(0.5, 0.85, 0.9, 1)
+min_display_radius = 7.0
+max_display_radius = 25.0
+orbital_radius = 2872460000000.0
+orbital_eccentricity = 0.047
+start_true_anomaly = 4.8
+
+[node name="Neptune" type="Node2D" parent="."]
+script = ExtResource("2_planet")
+body_name = "Neptune"
+mass = 1.024e+26
+radius = 24622000.0
+display_color = Color(0.2, 0.35, 0.85, 1)
+min_display_radius = 7.0
+max_display_radius = 25.0
+orbital_radius = 4495060000000.0
+orbital_eccentricity = 0.009
+start_true_anomaly = 5.6
