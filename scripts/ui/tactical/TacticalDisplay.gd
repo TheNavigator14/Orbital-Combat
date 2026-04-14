@@ -24,6 +24,9 @@ const MAX_ZOOM := 10000.0
 # === References ===
 var scale_converter: ScaleConverter
 var camera: OrbitalCamera
+var maneuver_renderer: ManeuverRenderer
+var maneuver_interaction: ManeuverInteraction
+var navigation_planner: NavigationPlanner
 
 # === State ===
 var solar_system: Node = null
@@ -38,6 +41,22 @@ func _ready() -> void:
 	# Set initial zoom to see ship's local orbit around Earth
 	# At LINEAR_SCALE 1e-6 and zoom 50, the 400km orbit is ~200 pixels radius
 	scale_converter.zoom_level = 50.0
+
+	# Initialize maneuver renderer
+	maneuver_renderer = ManeuverRenderer.new()
+	maneuver_renderer.set_scale_converter(scale_converter)
+
+	# Initialize maneuver interaction
+	maneuver_interaction = ManeuverInteraction.new()
+	maneuver_interaction.setup(null, scale_converter, maneuver_renderer)
+	maneuver_interaction.maneuver_modified.connect(_on_maneuver_modified)
+
+	# Create navigation planner (hidden by default)
+	navigation_planner = NavigationPlanner.new()
+	navigation_planner.visible = false
+	add_child(navigation_planner)
+	navigation_planner.maneuvers_created.connect(_on_maneuvers_created)
+	navigation_planner.closed.connect(_on_navigation_planner_closed)
 
 	# Connect to GameManager
 	if GameManager:
@@ -55,13 +74,46 @@ func _update_scale_converter_size() -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	# Handle zoom with mouse wheel
+	# Don't process input if navigation planner is open
+	if navigation_planner and navigation_planner.visible:
+		return
+
+	# Handle mouse clicks
 	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			# Check PLAN ROUTE button
+			if _is_point_in_plan_route_button(event.position):
+				_open_navigation_planner()
+				accept_event()
+				return
+
+		# Let ManeuverInteraction handle mouse buttons
+		if maneuver_interaction and maneuver_interaction.handle_mouse_button(event):
+			accept_event()
+			return
+
+		# Handle zoom with mouse wheel
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 			zoom_in()
 			accept_event()
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			zoom_out()
+			accept_event()
+
+	# Handle mouse motion for drag interactions
+	if event is InputEventMouseMotion:
+		if maneuver_interaction and maneuver_interaction.handle_mouse_motion(event):
+			accept_event()
+			return
+
+	# Handle keyboard input
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_N:
+			_open_navigation_planner()
+			accept_event()
+		elif event.keycode == KEY_DELETE:
+			if maneuver_interaction:
+				maneuver_interaction.delete_selected_maneuver()
 			accept_event()
 
 
@@ -106,12 +158,17 @@ func _draw() -> void:
 		_draw_ship_orbit(player_ship)
 		_draw_ship(player_ship)
 
+		# Draw maneuver nodes
+		if maneuver_renderer:
+			maneuver_renderer.draw_maneuvers(self, player_ship)
+
 	# CRT effects
 	_draw_scanlines()
 	_draw_vignette()
 
 	# UI overlay
 	_draw_info_panel()
+	_draw_plan_route_button()
 
 
 func _draw_distance_grid() -> void:
@@ -363,7 +420,62 @@ func _draw_info_panel() -> void:
 
 func _on_player_ship_changed(ship: Node) -> void:
 	player_ship = ship as Ship
+	if maneuver_interaction:
+		maneuver_interaction.set_ship(player_ship)
 
 
 func _on_focus_changed(body: Node) -> void:
 	selected_body = body
+
+
+func _on_maneuver_modified(_maneuver: ManeuverNode) -> void:
+	## Called when a maneuver is modified via drag handles
+	queue_redraw()
+
+
+# === Plan Route Button ===
+
+const BUTTON_WIDTH := 100.0
+const BUTTON_HEIGHT := 28.0
+const BUTTON_MARGIN := 10.0
+
+func _get_plan_route_button_rect() -> Rect2:
+	return Rect2(size.x - BUTTON_WIDTH - BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_WIDTH, BUTTON_HEIGHT)
+
+
+func _draw_plan_route_button() -> void:
+	## Draw the PLAN ROUTE button
+	var rect = _get_plan_route_button_rect()
+
+	# Button background
+	var bg_color = Color(0.0, 0.25, 0.0, 0.8)
+	draw_rect(rect, bg_color)
+
+	# Button border
+	draw_rect(rect, BODY_COLOR, false, 1.5)
+
+	# Button text
+	var text_pos = rect.position + Vector2(rect.size.x / 2 - 35, rect.size.y / 2 + 4)
+	draw_string(ThemeDB.fallback_font, text_pos, "PLAN ROUTE", HORIZONTAL_ALIGNMENT_CENTER, 70, 11, TEXT_COLOR)
+
+
+func _is_point_in_plan_route_button(point: Vector2) -> bool:
+	return _get_plan_route_button_rect().has_point(point)
+
+
+func _open_navigation_planner() -> void:
+	## Open the navigation planner window
+	if navigation_planner and player_ship:
+		navigation_planner.open(player_ship)
+
+
+func _on_maneuvers_created(plan: TrajectoryPlanner.ManeuverPlan) -> void:
+	## Called when navigation planner creates maneuvers
+	if plan.maneuvers.size() > 0 and maneuver_interaction:
+		# Select the first maneuver
+		maneuver_interaction.select_maneuver(plan.maneuvers[0])
+
+
+func _on_navigation_planner_closed() -> void:
+	## Called when navigation planner is closed
+	pass

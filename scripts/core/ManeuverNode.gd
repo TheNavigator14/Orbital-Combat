@@ -8,6 +8,14 @@ signal node_modified()
 @export var execution_time: float = 0.0  # Simulation time to execute (seconds)
 @export var delta_v: Vector2 = Vector2.ZERO  # Velocity change in world coordinates (m/s)
 
+# === Burn Type (for patched conic transfers) ===
+var burn_type: String = "NORMAL"  # NORMAL, ESCAPE, CAPTURE, MIDCOURSE
+
+# === Pending Capture Burn (activates on SOI entry) ===
+var is_pending_capture: bool = false
+var target_planet: Planet = null
+var expected_dv_magnitude: float = 0.0  # For display before actual direction is known
+
 # === Calculated Values ===
 var burn_duration: float = 0.0  # Estimated burn time (seconds)
 var resulting_orbit: OrbitState = null  # Predicted orbit after maneuver
@@ -86,8 +94,22 @@ func is_past(current_time: float) -> bool:
 
 
 func get_info_string() -> String:
-	return "T%s\nDelta-v: %s\nBurn: %.1f s" % [
+	var type_label = ""
+	match burn_type:
+		"ESCAPE":
+			type_label = "[ESCAPE]\n"
+		"CAPTURE":
+			type_label = "[CAPTURE]\n"
+		"MIDCOURSE":
+			type_label = "[MIDCOURSE]\n"
+
+	var dv_value = delta_v.length()
+	if is_pending_capture and expected_dv_magnitude > 0:
+		dv_value = expected_dv_magnitude
+
+	return "%sT%s\nDelta-v: %s\nBurn: %.1f s" % [
+		type_label,
 		OrbitalConstantsClass.format_time(execution_time - TimeManager.simulation_time),
-		OrbitalConstantsClass.format_velocity(delta_v.length()),
+		OrbitalConstantsClass.format_velocity(dv_value),
 		burn_duration
 	]

@@ -282,6 +282,53 @@ static func calculate_circular_velocity(radius: float, mu: float) -> float:
 	return sqrt(mu / radius)
 
 
+# === Interplanetary Transfer Calculations ===
+
+static func calculate_phase_angle(pos1: Vector2, pos2: Vector2) -> float:
+	## Calculate the phase angle between two bodies (from pos1's perspective)
+	## Returns angle in radians [0, 2*PI], positive = pos2 is ahead
+	var angle1 = atan2(pos1.y, pos1.x)
+	var angle2 = atan2(pos2.y, pos2.x)
+	var phase = angle2 - angle1
+	return fmod(phase + TAU, TAU)
+
+
+static func hohmann_phase_angle(r1: float, r2: float, mu: float) -> float:
+	## Calculate the required phase angle for a Hohmann transfer
+	## This is how far ahead (or behind) the target should be at departure
+	## For transfer to outer planet: target should be AHEAD by this angle
+	## For transfer to inner planet: target should be BEHIND (use TAU - result)
+	var a_transfer = (r1 + r2) / 2.0
+	var transfer_time = PI * sqrt(pow(a_transfer, 3) / mu)
+	var target_mean_motion = sqrt(mu / pow(r2, 3))
+	var angle_traveled_by_target = target_mean_motion * transfer_time
+	# Target needs to be at PI (opposite side) when we arrive
+	# So at departure, target should be at: PI - angle_it_will_travel
+	var required_phase = PI - angle_traveled_by_target
+	# Normalize to [0, 2*PI]
+	return fmod(required_phase + TAU, TAU)
+
+
+static func synodic_period(period1: float, period2: float) -> float:
+	## Calculate synodic period - time between successive alignments
+	## This is the time between transfer windows
+	if abs(period1 - period2) < 1e-10:
+		return INF  # Same period = always aligned
+	return abs(period1 * period2 / (period1 - period2))
+
+
+static func time_to_phase_angle(current_phase: float, target_phase: float,
+		angular_rate_diff: float) -> float:
+	## Calculate time until phase angle reaches target value
+	## angular_rate_diff = (n1 - n2) where n is mean motion
+	if abs(angular_rate_diff) < 1e-15:
+		return INF  # No relative motion
+	var phase_diff = target_phase - current_phase
+	if phase_diff < 0:
+		phase_diff += TAU
+	return phase_diff / abs(angular_rate_diff)
+
+
 # === Propagation ===
 
 static func propagate_mean_anomaly(mean_anomaly_0: float, mean_motion: float, delta_time: float) -> float:
@@ -356,3 +403,109 @@ static func rk4_step(position: Vector2, velocity: Vector2, mu: float, dt: float,
 	var new_velocity = velocity + (dt / 6.0) * (k1_a + 2.0 * k2_a + 2.0 * k3_a + k4_a)
 
 	return { "position": new_position, "velocity": new_velocity }
+
+
+# === Patched Conic / Escape & Capture Burns ===
+
+static func calculate_escape_burn(parking_radius: float, v_infinity: float, mu: float) -> Dictionary:
+	## Calculate delta-v needed to escape from a circular parking orbit with given hyperbolic excess velocity
+	##
+	## parking_radius: radius of circular parking orbit (meters)
+	## v_infinity: required velocity at infinity relative to planet (m/s) - hyperbolic excess velocity
+	## mu: gravitational parameter of the planet
+	##
+	## Returns: { dv, v_circular, v_periapsis, c3 }
+	##
+	## Physics: At periapsis of escape hyperbola:
+	##   v_periapsis² = v_infinity² + 2μ/r_periapsis  (vis-viva for hyperbolic orbit at infinity vs periapsis)
+	##   Δv = v_periapsis - v_circular
+
+	# Velocity in circular parking orbit
+	var v_circular = sqrt(mu / parking_radius)
+
+	# Required velocity at periapsis for hyperbolic escape
+	# From energy conservation: v²/2 - μ/r = v_inf²/2 (specific energy at infinity)
+	# At periapsis: v_pe²/2 - μ/r_pe = v_inf²/2
+	# Therefore: v_pe² = v_inf² + 2μ/r_pe
+	var v_periapsis = sqrt(v_infinity * v_infinity + 2.0 * mu / parking_radius)
+
+	# Delta-v is the difference (always positive for escape, burn prograde)
+	var dv = v_periapsis - v_circular
+
+	# C3 is the characteristic energy (v_infinity squared), commonly used in mission planning
+	var c3 = v_infinity * v_infinity
+
+	return {
+		"dv": dv,
+		"v_circular": v_circular,
+		"v_periapsis": v_periapsis,
+		"v_infinity": v_infinity,
+		"c3": c3
+	}
+
+
+static func calculate_capture_burn(v_infinity: float, target_orbit_radius: float, mu: float) -> Dictionary:
+	## Calculate delta-v needed to capture into circular orbit from a hyperbolic approach
+	##
+	## v_infinity: approach velocity at infinity (hyperbolic excess velocity)
+	## target_orbit_radius: desired circular orbit radius after capture
+	## mu: gravitational parameter of the planet
+	##
+	## Returns: { dv, v_circular, v_periapsis }
+	##
+	## Physics: Ship arrives on hyperbolic trajectory, performs retrograde burn at periapsis
+	##   to slow down to circular orbit velocity
+
+	# Velocity at periapsis of hyperbolic approach (same formula as escape)
+	var v_periapsis = sqrt(v_infinity * v_infinity + 2.0 * mu / target_orbit_radius)
+
+	# Velocity needed for circular orbit at that radius
+	var v_circular = sqrt(mu / target_orbit_radius)
+
+	# Delta-v is retrograde to slow down (always positive magnitude)
+	var dv = v_periapsis - v_circular
+
+	return {
+		"dv": dv,
+		"v_circular": v_circular,
+		"v_periapsis": v_periapsis,
+		"v_infinity": v_infinity
+	}
+
+
+static func calculate_hyperbolic_excess_velocity(r_origin: float, r_target: float, mu_sun: float) -> Dictionary:
+	## Calculate the hyperbolic excess velocities for a Hohmann transfer between two planets
+	##
+	## r_origin: orbital radius of origin planet around Sun
+	## r_target: orbital radius of target planet around Sun
+	## mu_sun: gravitational parameter of the Sun
+	##
+	## Returns: { v_inf_departure, v_inf_arrival, transfer_time }
+	##
+	## These are the velocities the spacecraft has relative to each planet at SOI boundary
+
+	var hohmann = hohmann_transfer(r_origin, r_target, mu_sun)
+
+	# Circular velocities of the planets
+	var v_origin_circular = sqrt(mu_sun / r_origin)
+	var v_target_circular = sqrt(mu_sun / r_target)
+
+	# Transfer orbit velocities at each end
+	var a_transfer = hohmann.transfer_semi_major_axis
+	var v_departure = sqrt(mu_sun * (2.0 / r_origin - 1.0 / a_transfer))
+	var v_arrival = sqrt(mu_sun * (2.0 / r_target - 1.0 / a_transfer))
+
+	# Hyperbolic excess velocity is the difference between transfer velocity and planet velocity
+	# At departure: spacecraft is faster than planet (for outward) or slower (for inward)
+	# The magnitude is what matters for escape/capture burns
+	var v_inf_departure = abs(v_departure - v_origin_circular)
+	var v_inf_arrival = abs(v_target_circular - v_arrival)
+
+	return {
+		"v_inf_departure": v_inf_departure,
+		"v_inf_arrival": v_inf_arrival,
+		"transfer_time": hohmann.transfer_time,
+		"v_departure_helio": v_departure,
+		"v_arrival_helio": v_arrival,
+		"is_outward": r_target > r_origin
+	}

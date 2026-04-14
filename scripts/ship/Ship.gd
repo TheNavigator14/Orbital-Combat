@@ -9,6 +9,7 @@ signal fuel_depleted()
 signal orbit_changed()
 signal maneuver_started(node: ManeuverNode)
 signal maneuver_completed(node: ManeuverNode)
+signal soi_changed(old_parent: CelestialBody, new_parent: CelestialBody)
 
 # === Configuration ===
 @export var ship_name: String = "Ship"
@@ -97,6 +98,9 @@ func _physics_process(delta: float) -> void:
 	else:
 		# Kepler propagation when coasting
 		orbit_state.update_state_vectors(TimeManager.simulation_time)
+
+	# Check for SOI transitions
+	_check_soi_transition()
 
 	# Check for maneuver execution
 	_check_maneuver_schedule()
@@ -212,6 +216,103 @@ func set_manual_thrust(direction: Vector2, throttle_level: float = 1.0) -> void:
 func _on_fuel_depleted() -> void:
 	stop_thrust()
 	fuel_depleted.emit()
+
+
+# === SOI Transition ===
+
+func _check_soi_transition() -> void:
+	## Check if ship has crossed an SOI boundary and handle transition
+	var current_world_pos = world_position
+
+	# Case 1: Check if leaving current parent's SOI (exiting to parent's parent)
+	if parent_body is Planet:
+		var planet = parent_body as Planet
+		var distance_from_parent = orbit_state.position.length()
+
+		if distance_from_parent >= planet.sphere_of_influence:
+			# Exiting to parent's parent (e.g., Earth SOI -> Sun)
+			var new_parent = planet.parent_body
+			if new_parent != null:
+				_transition_to_body(new_parent)
+				return
+
+	# Case 2: Check if entering a child body's SOI
+	# (e.g., from Sun's SOI into Mars' SOI)
+	var bodies = GameManager.get_all_celestial_bodies()
+	for body in bodies:
+		if body == parent_body:
+			continue
+		if not body is Planet:
+			continue
+
+		var planet = body as Planet
+
+		# Only check planets that orbit our current parent
+		if planet.parent_body != parent_body:
+			continue
+
+		if planet.is_point_in_soi(current_world_pos):
+			_transition_to_body(planet)
+			return
+
+
+func _transition_to_body(new_parent: CelestialBody) -> void:
+	## Transform orbit state from current parent to new parent reference frame
+	var old_parent = parent_body
+	var current_time = TimeManager.simulation_time
+
+	# Get current state vectors in world frame
+	orbit_state.update_state_vectors(current_time)
+	var world_pos = orbit_state.position + old_parent.world_position
+	var world_vel = orbit_state.velocity
+
+	# If old parent is orbiting something (is a planet), add its orbital velocity
+	if old_parent is Planet:
+		var planet = old_parent as Planet
+		world_vel += planet.get_orbital_velocity()
+
+	# Calculate position and velocity relative to new parent
+	var rel_pos = world_pos - new_parent.world_position
+	var rel_vel = world_vel
+
+	# Subtract new parent's orbital velocity if it's a planet
+	if new_parent is Planet:
+		var planet = new_parent as Planet
+		rel_vel -= planet.get_orbital_velocity()
+
+	# Create new orbit state in new reference frame
+	orbit_state = OrbitState.create_from_state_vectors(rel_pos, rel_vel, new_parent.mu, current_time)
+	parent_body = new_parent
+
+	# Emit signals for UI updates
+	orbit_changed.emit()
+	soi_changed.emit(old_parent, new_parent)
+
+	print("SOI Transition: %s -> %s" % [old_parent.body_name, new_parent.body_name])
+	print("  New orbit: a=%.0f km, e=%.4f, %s" % [
+		orbit_state.semi_major_axis / 1000.0,
+		orbit_state.eccentricity,
+		"hyperbolic" if orbit_state.is_hyperbolic else "elliptical"
+	])
+
+
+func get_heliocentric_velocity() -> Vector2:
+	## Get velocity in heliocentric (Sun-centered) frame
+	var vel = orbit_state.velocity
+	var current = parent_body
+
+	# Walk up the hierarchy adding orbital velocities
+	while current is Planet:
+		var planet = current as Planet
+		vel += planet.get_orbital_velocity()
+		current = planet.parent_body
+
+	return vel
+
+
+func get_heliocentric_position() -> Vector2:
+	## Get position in heliocentric (Sun-centered) frame
+	return world_position  # world_position is already heliocentric since Sun is at origin
 
 
 # === Maneuver Planning ===

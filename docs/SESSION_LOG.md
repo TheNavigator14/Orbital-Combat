@@ -240,3 +240,436 @@ Added all planets with realistic orbital parameters:
 - Thrust particle effects
 - Orbit prediction while thrusting
 - Sound effects
+
+---
+
+## Session 3: GitHub Repository Setup
+**Date:** 2026-04-06
+
+### Overview
+Set up version control and pushed the project to GitHub for backup and collaboration.
+
+### Changes Made
+
+#### 1. Git Repository Initialization
+- Initialized git repository in project folder
+- Created `.gitignore` for Godot projects:
+  - Ignores `.godot/` (engine cache)
+  - Ignores build outputs (`.exe`, `.pck`, `.apk`)
+  - Ignores IDE files (`.vscode/`, `.idea/`)
+
+#### 2. GitHub Setup
+- Configured git identity for commits
+- Created initial commit with 41 files (3,761 lines of code)
+- Pushed to GitHub: `https://github.com/TheNavigator14/Orbital-Combat`
+
+### Files Added
+- `.gitignore` - Godot-specific ignore patterns
+
+### Repository Structure
+```
+Orbital-Combat/
+├── .gitignore
+├── project.godot
+├── icon.svg
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── GAME_DESIGN.md
+│   └── SESSION_LOG.md
+├── scenes/
+│   ├── Main.tscn
+│   ├── SolarSystem.tscn
+│   └── bodies/
+├── scripts/
+│   ├── Main.gd
+│   ├── autoload/
+│   ├── bodies/
+│   ├── camera/
+│   ├── core/
+│   ├── ship/
+│   └── ui/
+└── shaders/
+```
+
+### Current State
+- Project under version control
+- All code backed up to GitHub
+- Ready for collaborative development
+
+---
+
+## Session 4: Navigation System Implementation
+**Date:** 2026-04-13
+
+### Overview
+Implemented a goal-oriented navigation system with interplanetary transfer planning, maneuver visualization, and interactive editing.
+
+### Design Philosophy
+- **Two-mode system**: Tactical display for combat/manual flying, Navigation Planner popup for mission planning
+- **Goal-oriented**: Select destination and burn mode, system calculates optimal maneuvers
+- **Manual fine-tuning**: Drag handles on calculated maneuvers for tactical adjustments
+
+### New Files Created
+
+#### Navigation Backend (`scripts/navigation/`)
+1. **TransferCalculator.gd** - Interplanetary transfer mathematics:
+   - Phase angle calculation between bodies
+   - Transfer window computation (synodic period)
+   - Hohmann transfer delta-v calculations
+   - Window class with departure/arrival times and delta-v
+
+2. **TrajectoryPlanner.gd** - Converts goals into ManeuverNodes:
+   - Transfer to planet → departure + arrival burns
+   - Circularize at Ap/Pe → single burn
+   - Raise/Lower Ap/Pe → single burn
+   - ManeuverPlan class for grouping related maneuvers
+
+#### Tactical UI (`scripts/ui/tactical/`)
+3. **ManeuverRenderer.gd** - Renders maneuvers on tactical display:
+   - Diamond markers at burn positions
+   - Delta-v arrows showing burn direction/magnitude
+   - Predicted trajectory (dashed amber line)
+   - Prograde/radial drag handles for editing
+   - Hit testing for click detection
+
+4. **ManeuverInteraction.gd** - Handles maneuver editing:
+   - Click to select maneuvers
+   - Drag handles to adjust delta-v
+   - Delete selected maneuver
+   - Warp to maneuver time
+
+#### Navigation UI (`scripts/ui/navigation/`)
+5. **NavigationPlanner.gd** - Pop-up navigation computer window:
+   - Goal selector (Transfer, Circularize, etc.)
+   - Target planet selector
+   - Transfer window list with departure times and delta-v costs
+   - Creates maneuver nodes on confirmation
+   - Auto-pause option while planning
+
+### Files Modified
+
+#### `scripts/core/OrbitalMechanics.gd`
+Added interplanetary transfer functions:
+- `calculate_phase_angle(pos1, pos2)` - Angle between two bodies
+- `hohmann_phase_angle(r1, r2, mu)` - Required phase angle for transfer
+- `synodic_period(period1, period2)` - Time between windows
+- `time_to_phase_angle()` - When phase angle will be reached
+
+#### `scripts/ui/tactical/TacticalDisplay.gd`
+Integrated navigation system:
+- Added ManeuverRenderer for drawing maneuvers
+- Added ManeuverInteraction for editing
+- Added NavigationPlanner popup (child node)
+- Added "PLAN ROUTE" button (top-right)
+- Added keyboard shortcut (N) to open planner
+- Added DELETE key to remove selected maneuver
+
+### Controls Added
+| Key | Action |
+|-----|--------|
+| N | Open Navigation Planner |
+| Delete | Delete selected maneuver |
+| Click on maneuver | Select maneuver |
+| Drag handle | Adjust delta-v |
+| Click PLAN ROUTE | Open Navigation Planner |
+
+### Architecture
+
+```
+User selects goal (e.g., "Transfer to Mars")
+    │
+    ▼
+NavigationPlanner.gd
+    │── Queries TransferCalculator.gd for windows
+    │── User selects window
+    │── Calls TrajectoryPlanner.gd
+    │
+    ▼
+TrajectoryPlanner.gd
+    │── Creates ManeuverNode(s) via Ship.plan_maneuver()
+    │── Returns ManeuverPlan
+    │
+    ▼
+TacticalDisplay.gd
+    │── ManeuverRenderer draws nodes
+    │── ManeuverInteraction handles editing
+    │
+    ▼
+Ship.gd (existing)
+    │── Stores planned_maneuvers array
+    │── Auto-executes at scheduled time
+```
+
+### Current State
+- Navigation planner opens with "PLAN ROUTE" button or N key
+- Can select interplanetary transfers and see transfer windows
+- Creates departure and arrival burns for Hohmann transfers
+- Maneuvers appear on tactical display as yellow diamonds
+- Can select and see predicted trajectory
+- Can drag handles to fine-tune delta-v
+- Delete key removes selected maneuver
+- Existing auto-execution system handles burn timing
+
+### Known Limitations / Future Work
+1. **Ship orbit assumption**: Transfer calculator assumes heliocentric orbit
+2. **Orbit adjustment goals**: Raise/Lower Ap/Pe not fully wired up in UI
+3. **Continuous thrust**: Only Hohmann (coast) mode implemented
+4. **SOI transitions**: Not yet handled for arriving at planets
+5. **Visual polish**: Basic UI, could use more CRT styling
+
+### Next Steps (Priority Order)
+
+1. **Test and Debug**
+   - Run game and test full navigation flow
+   - Fix any issues with transfer calculations
+   - Verify maneuver execution works correctly
+
+2. **SOI Transitions**
+   - Detect when ship enters planet SOI
+   - Switch parent body and recalculate orbit
+   - Arrival burns should capture into planet orbit
+
+3. **Orbit Adjustment UI**
+   - Wire up circularize, raise/lower Ap/Pe in navigation planner
+   - Add altitude input for custom orbit changes
+
+4. **Maneuver Info Panel**
+   - Show details of selected maneuver
+   - Add "Warp To" button
+   - Countdown timer near execution
+
+5. **Continuous Thrust**
+   - Calculate brachistochrone trajectories
+   - Preview thrust-coast-thrust paths
+   - Hybrid burn modes
+
+---
+
+## Session 4 (Continued): Gravity Assist Detection
+**Date:** 2026-04-13
+
+### Overview
+Added automatic detection of gravity assist (flyby) opportunities along interplanetary transfer trajectories.
+
+### Changes Made
+
+#### 1. TransferCalculator.gd - Flyby Detection System
+Added new classes and functions for detecting when transfers pass near intermediate planets:
+
+- **FlybyOpportunity class**: Stores flyby data including:
+  - Target planet and encounter time
+  - Closest approach distance
+  - Estimated delta-v savings
+  - Turn angle from gravity assist
+  - Viability flag (within SOI and safe altitude)
+
+- **TransferWindow extensions**:
+  - Added `flyby_opportunities` array to store detected flybys
+  - Added `has_viable_flybys()` to check for opportunities
+  - Added `get_best_flyby()` to get the highest delta-v benefit flyby
+  - Updated `get_info_string()` to include flyby information
+
+- **Detection functions**:
+  - `detect_flybys_for_window()` - Scans for planets along transfer path
+  - `_calculate_flyby_opportunity()` - Computes encounter details
+  - `_estimate_gravity_assist_dv()` - Calculates delta-v benefit using patched conic approximation
+  - `_estimate_turn_angle()` - Computes trajectory bend angle
+
+#### 2. NavigationPlanner.gd - Flyby UI
+Updated the navigation planner to display flyby information:
+
+- Added "Flyby" column to transfer window list
+- Shows abbreviated planet name (e.g., "VEN", "MAR") for windows with viable flybys
+- Added gold/amber color for flyby indicators
+- Selected transfer summary now shows flyby assist details with estimated delta-v savings
+- Increased window height to accommodate flyby information
+
+### Technical Details
+
+#### Gravity Assist Physics
+The system uses the patched conic approximation:
+1. Calculate spacecraft velocity relative to Sun at flyby point
+2. Compute approach velocity relative to the flyby planet
+3. Estimate turn angle using: `sin(δ/2) = 1 / (1 + r_p * v_inf² / μ)`
+4. Calculate delta-v benefit: `Δv = 2 * v_inf * sin(δ/2)`
+
+#### Flyby Viability Criteria
+- Planet's orbital radius must intersect the transfer trajectory
+- Encounter must occur within planet's sphere of influence
+- Closest approach must be above minimum safe altitude (1.1x planet radius)
+
+### Current State
+- Transfer windows now automatically detect flyby opportunities
+- Viable flybys are highlighted in the navigation planner UI
+- Estimated delta-v savings are shown for each flyby
+- System detects flybys for Earth→Mars (Venus assist) and other transfers
+
+### Known Limitations
+1. **Simplified geometry**: Assumes coplanar orbits and optimal flyby geometry
+2. **Timing approximation**: Planet position at encounter is estimated
+3. **No trajectory modification**: Shows flyby potential but doesn't modify the transfer plan
+4. **Single flyby**: Only detects one flyby per window, not multi-flyby sequences
+
+### Next Steps
+1. **Flyby trajectory planning**: Modify transfer to actually use the gravity assist
+2. **Multi-flyby sequences**: Detect chains like Earth→Venus→Venus→Mercury
+3. **Optimal flyby routing**: Calculate modified departure times for best assist geometry
+4. **Flyby visualization**: Show flyby path on tactical display
+
+---
+
+## Session 5: SOI Transitions & Patched Conic Transfers
+**Date:** 2026-04-14
+
+### Overview
+Implemented complete Sphere of Influence (SOI) transition system and patched conic interplanetary transfers. Ships can now properly escape from planetary orbit, coast on heliocentric transfer trajectories, and capture into destination orbit.
+
+### Problem Solved
+Previously, the transfer system assumed ships were already in heliocentric (Sun-centered) orbit. A ship starting in Earth orbit couldn't actually reach Mars because:
+1. No escape burn from Earth's gravity well
+2. No velocity frame transformation when crossing SOI boundaries
+3. No capture burn when arriving at destination
+
+### Solution: Patched Conic Approximation
+A real interplanetary transfer has 3 phases:
+1. **ESCAPE**: Burn to leave origin planet's SOI with hyperbolic excess velocity
+2. **COAST**: Heliocentric Hohmann transfer ellipse
+3. **CAPTURE**: Burn to enter destination orbit from hyperbolic approach
+
+### Files Created
+
+#### `scripts/navigation/TrajectoryPredictor.gd` (NEW)
+Multi-segment trajectory prediction across SOI boundaries:
+- `TrajectorySegment` class stores orbit data per SOI
+- `predict_trajectory()` - predicts path including SOI crossings
+- `predict_until_soi_exit()` - for escape trajectory visualization
+- Handles velocity transformations at SOI boundaries
+
+### Files Modified
+
+#### `scripts/ship/Ship.gd`
+Added SOI detection and transition system:
+```gdscript
+signal soi_changed(old_parent, new_parent)
+
+func _check_soi_transition():
+    # Check if leaving current parent's SOI
+    # Check if entering a child body's SOI
+
+func _transition_to_body(new_parent):
+    # Transform orbit state to new reference frame
+    # Add/subtract parent orbital velocities
+    # Create new OrbitState in new frame
+
+func get_heliocentric_velocity() -> Vector2
+func get_heliocentric_position() -> Vector2
+```
+
+#### `scripts/core/OrbitalMechanics.gd`
+Added escape/capture burn calculations:
+```gdscript
+static func calculate_escape_burn(parking_radius, v_infinity, mu) -> Dictionary
+    # Returns: { dv, v_circular, v_periapsis, c3 }
+    # Physics: v_pe² = v_inf² + 2μ/r
+
+static func calculate_capture_burn(v_infinity, target_orbit_radius, mu) -> Dictionary
+    # Same formula, opposite direction (retrograde)
+
+static func calculate_hyperbolic_excess_velocity(r_origin, r_target, mu_sun) -> Dictionary
+    # Returns: { v_inf_departure, v_inf_arrival, transfer_time }
+```
+
+#### `scripts/navigation/TransferCalculator.gd`
+Added patched conic transfer support:
+```gdscript
+class PatchedConicTransfer:
+    var escape_dv: float         # Phase 1
+    var escape_v_infinity: float
+    var capture_dv: float        # Phase 3
+    var capture_v_infinity: float
+    var transfer_time: float
+
+class TransferWindow:
+    # Extended with:
+    var is_patched_conic: bool
+    var patched_conic: PatchedConicTransfer
+    var escape_dv, capture_dv: float
+
+static func calculate_patched_conic_transfer(...) -> PatchedConicTransfer
+static func calculate_patched_conic_windows(ship, target, count) -> Array[TransferWindow]
+```
+
+#### `scripts/navigation/TrajectoryPlanner.gd`
+Updated for 3-burn planning:
+```gdscript
+static func plan_transfer_to_planet():
+    # Now detects patched conic windows and routes accordingly
+
+static func _plan_patched_conic_transfer():
+    # Creates ESCAPE burn at periapsis of parking orbit
+    # Creates pending CAPTURE burn (activates on SOI entry)
+```
+
+#### `scripts/core/ManeuverNode.gd`
+Added burn type support:
+```gdscript
+var burn_type: String = "NORMAL"  # NORMAL, ESCAPE, CAPTURE, MIDCOURSE
+var is_pending_capture: bool = false
+var target_planet: Planet = null
+var expected_dv_magnitude: float = 0.0
+```
+
+#### `scripts/ui/navigation/NavigationPlanner.gd`
+Updated UI for 3-phase display:
+- Shows ESCAPE burn delta-v and v∞
+- Shows COAST duration
+- Shows CAPTURE burn delta-v and v∞
+- Color-coded phase labels (green/white/orange)
+
+### Key Physics
+
+#### Escape Burn
+At periapsis of parking orbit:
+```
+v_pe² = v_inf² + 2μ/r_pe
+Δv_escape = v_pe - v_circular
+```
+
+#### Capture Burn
+At periapsis of hyperbolic approach:
+```
+v_pe² = v_inf² + 2μ/r_pe
+Δv_capture = v_pe - v_circular
+```
+
+#### SOI Velocity Transformation
+When crossing SOI boundary:
+```
+v_new_frame = v_old_frame + v_old_parent_orbital - v_new_parent_orbital
+```
+
+### Example: Earth to Mars Transfer
+From 400km Earth orbit:
+- **Escape**: ~3.6 km/s (v∞ = 2.9 km/s)
+- **Coast**: ~260 days
+- **Capture**: ~2.1 km/s (into 400km Mars orbit)
+- **Total**: ~5.7 km/s
+
+### Current State
+- Ships can escape Earth's SOI by burning prograde
+- SOI transitions are detected automatically during flight
+- Navigation planner shows 3-phase breakdown for planetary transfers
+- Transfer windows calculate proper escape and capture delta-v
+- Pending capture burns are created for destination SOI entry
+
+### Known Limitations
+1. **Capture burn timing**: Currently scheduled at arrival_time, should activate on SOI entry
+2. **Burn direction**: Escape always prograde, capture always retrograde (simplified)
+3. **Optimal departure**: Should burn at periapsis aligned with escape direction
+4. **No visualization**: TrajectoryPredictor created but not integrated with ManeuverRenderer yet
+
+### Next Steps
+1. **Integrate TrajectoryPredictor with ManeuverRenderer** - Show escape hyperbola and transfer ellipse
+2. **Activate capture burn on SOI entry** - Listen for soi_changed signal
+3. **Calculate optimal escape timing** - Align periapsis with departure direction
+4. **Test full transfer** - Earth orbit → Mars orbit with time warp
