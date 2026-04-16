@@ -1,0 +1,212 @@
+[gd_scene load_steps=2 format=3 uid="uid://ship_panel_scene"]
+
+[ext_resource type="Script" path="res://scripts/ui/panels/ShipPanel.gd" id="1_ship_panel"]
+
+[node name="ShipPanel" type="PanelContainer"]
+custom_minimum_size = Vector2(280, 460)
+offset_right = 280.0
+offset_bottom = 460.0
+script = ExtResource("1_ship_panel")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ShipNameLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 1, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "[ SHIP ]"
+horizontal_alignment = 1
+
+[node name="ThrustStatusContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ThrustStatusTitle" type="Label" parent="VBoxContainer/ThrustStatusContainer"]
+layout_mode = 2
+text = "Thrust Status:"
+
+[node name="ThrustStatusLabel" type="Label" parent="VBoxContainer/ThrustStatusContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "IDLE"
+
+[node name="ThrustDirectionContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ThrustDirectionTitle" type="Label" parent="VBoxContainer/ThrustDirectionContainer"]
+layout_mode = 2
+text = "Direction:"
+
+[node name="ThrustDirectionLabel" type="Label" parent="VBoxContainer/ThrustDirectionContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+text = "---"
+
+[node name="HeadingContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="HeadingTitle" type="Label" parent="VBoxContainer/HeadingContainer"]
+layout_mode = 2
+text = "Heading:"
+
+[node name="HeadingLabel" type="Label" parent="VBoxContainer/HeadingContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.7, 0.9, 1, 1)
+text = "HDG: ---"
+
+[node name="FuelContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="FuelLabel" type="Label" parent="VBoxContainer/FuelContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.5, 1)
+text = "FUEL: NOMINAL"
+
+[node name="FuelBar" type="ProgressBar" parent="VBoxContainer/FuelContainer"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+max_value = 100.0
+step = 0.1
+show_percentage = false
+
+[node name="FuelPercentLabel" type="Label" parent="VBoxContainer/FuelContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+text = "100.0%"
+horizontal_alignment = 1
+
+[node name="DeltaVContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="DeltaVLabel" type="Label" parent="VBoxContainer/DeltaVContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.2, 1, 0.4, 1)
+text = "dV: ---"
+
+[node name="MaxDeltaVLabel" type="Label" parent="VBoxContainer/DeltaVContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+text = "Max: ---"
+
+[node name="TWRContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="TWRLabel" type="Label" parent="VBoxContainer/TWRContainer"]
+layout_mode = 2
+text = "TWR: ---"
+
+[node name="MassContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="MassLabel" type="Label" parent="VBoxContainer/MassContainer"]
+layout_mode = 2
+text = "Mass: --- kg"
+
+[node name="ThrustWattsContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ThrustWattsLabel" type="Label" parent="VBoxContainer/ThrustWattsContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.7, 0.3, 1)
+text = "Thrust: 0 kN"
+
+[node name="HSeparator1" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ThrustControls" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ThrustControlsLabel" type="Label" parent="VBoxContainer/ThrustControls"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
+text = "[ THRUST CONTROL ]"
+horizontal_alignment = 1
+
+[node name="ThrustRow1" type="HBoxContainer" parent="VBoxContainer/ThrustControls"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ProgradeBtn" type="Button" parent="VBoxContainer/ThrustControls/ThrustRow1"]
+custom_minimum_size = Vector2(62, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "PRO"
+
+[node name="RetrogradeBtn" type="Button" parent="VBoxContainer/ThrustControls/ThrustRow1"]
+custom_minimum_size = Vector2(62, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "RETRO"
+
+[node name="RadialInBtn" type="Button" parent="VBoxContainer/ThrustControls/ThrustRow1"]
+custom_minimum_size = Vector2(62, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "RAD-"
+
+[node name="ThrustRow2" type="HBoxContainer" parent="VBoxContainer/ThrustControls"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="RadialOutBtn" type="Button" parent="VBoxContainer/ThrustControls/ThrustRow2"]
+custom_minimum_size = Vector2(62, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "RAD+"
+
+[node name="NormalBtn" type="Button" parent="VBoxContainer/ThrustControls/ThrustRow2"]
+custom_minimum_size = Vector2(62, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "NORM"
+
+[node name="AntiNormalBtn" type="Button" parent="VBoxContainer/ThrustControls/ThrustRow2"]
+custom_minimum_size = Vector2(62, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ANTI"
+
+[node name="ThrustRow3" type="HBoxContainer" parent="VBoxContainer/ThrustControls"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="StopBtn" type="Button" parent="VBoxContainer/ThrustControls/ThrustRow3"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+disabled = true
+text = "STOP"
+
+[node name="Spacer1" type="Control" parent="VBoxContainer/ThrustControls/ThrustRow3"]
+custom_minimum_size = Vector2(62, 0)
+layout_mode = 2
+
+[node name="Spacer2" type="Control" parent="VBoxContainer/ThrustControls/ThrustRow3"]
+custom_minimum_size = Vector2(62, 0)
+layout_mode = 2
+
+[node name="ThrottleContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ThrottleLabel" type="Label" parent="VBoxContainer/ThrottleContainer"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.5, 1)
+text = "THROTTLE: 100%"
+
+[node name="ThrottleSlider" type="HSlider" parent="VBoxContainer/ThrottleContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 100.0
+step = 1.0
+value = 100.0

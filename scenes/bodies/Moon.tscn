@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3 uid="uid://cvp2k8lq5rxwq"]
+
+[ext_resource type="Script" path="res://scripts/bodies/Moon.gd" id="1_moon"]
+
+[node name="Moon" type="Node2D"]
+script = ExtResource("1_moon")
+body_name = "Moon"
+display_color = Color(0.7, 0.7, 0.7, 1)
+physical_radius = 1737000.0
+mass = 7.342e22
+min_display_radius = 4.0
+max_display_radius = 12.0

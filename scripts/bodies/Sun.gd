@@ -5,8 +5,8 @@ extends CelestialBody
 
 func _init() -> void:
 	body_name = "Sun"
-	mass = OrbitalConstantsClass.SUN_MASS
-	radius = OrbitalConstantsClass.SUN_RADIUS
+	mass = OrbitalConstants.SUN_MASS
+	radius = OrbitalConstants.SUN_RADIUS
 	display_color = Color(1.0, 0.9, 0.6)  # Warm yellow
 
 

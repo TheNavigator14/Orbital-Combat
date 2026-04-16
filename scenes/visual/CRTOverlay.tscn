@@ -1,0 +1,34 @@
+[gd_scene load_steps=2 format=3 uid="uid://crt_overlay"]
+
+[ext_resource type="Script" path="res://scripts/visual/CRTOverlay.gd" id="1_crt"]
+
+[node name="CRTOverlay" type="CanvasLayer"]
+script = ExtResource("1_crt")
+
+[node name="Scanlines" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Vignette" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PhosphorGlow" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ScreenNoise" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

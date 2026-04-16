@@ -1,0 +1,136 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/panels/SquadronSpawnerPanel.gd" id="1_spawner_panel"]
+
+[node name="SquadronSpawnerPanel" type="PanelContainer"]
+custom_minimum_size = Vector2(180, 320)
+offset_right = 180.0
+offset_bottom = 320.0
+script = ExtResource("1_spawner_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 1, 0.2, 1)
+theme_override_font_sizes/font_size = 14
+text = "SQUADRON CONTROL"
+horizontal_alignment = 1
+
+[node name="Separator1" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.5, 1)
+theme_override_font_sizes/font_size = 10
+text = "Active: 0 / 3 squadrons"
+
+[node name="WaveLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.5, 1)
+theme_override_font_sizes/font_size = 10
+text = "Wave: 0"
+
+[node name="Spacing1" type="Control" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="SpawnLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "SPAWN SQUADRON:"
+
+[node name="SpawnButtons" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="SpawnStandard" type="Button" parent="MarginContainer/VBoxContainer/SpawnButtons"]
+custom_minimum_size = Vector2(76, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Standard"
+
+[node name="SpawnHeavy" type="Button" parent="MarginContainer/VBoxContainer/SpawnButtons"]
+custom_minimum_size = Vector2(76, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Heavy"
+
+[node name="SpawnStealth" type="Button" parent="MarginContainer/VBoxContainer/SpawnButtons"]
+custom_minimum_size = Vector2(76, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Stealth"
+
+[node name="SpawnScout" type="Button" parent="MarginContainer/VBoxContainer/SpawnButtons"]
+custom_minimum_size = Vector2(76, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Scout"
+
+[node name="Spacing2" type="Control" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="WaveLabel2" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "WAVE MODE:"
+
+[node name="WaveButtons" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="SpawnWave" type="Button" parent="MarginContainer/VBoxContainer/WaveButtons"]
+custom_minimum_size = Vector2(110, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Wave (1)"
+
+[node name="AutoWave" type="CheckButton" parent="MarginContainer/VBoxContainer/WaveButtons"]
+layout_mode = 2
+button_pressed = false
+text = "Auto"
+
+[node name="Spacing3" type="Control" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="ControlLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "CONTROL:"
+
+[node name="ClearButton" type="Button" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+text = "Clear All"
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ActiveLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "ACTIVE SQUADRONS:"
+
+[node name="SquadronList" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+
+[node name="NoSquadrons" type="Label" parent="MarginContainer/VBoxContainer/SquadronList"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 10
+text = "(none)"

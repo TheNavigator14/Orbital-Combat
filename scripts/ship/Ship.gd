@@ -10,6 +10,8 @@ signal orbit_changed()
 signal maneuver_started(node: ManeuverNode)
 signal maneuver_completed(node: ManeuverNode)
 signal soi_changed(old_parent: CelestialBody, new_parent: CelestialBody)
+signal ship_destroyed()
+signal damage_taken(amount: float, source: String)
 
 # === Configuration ===
 @export var ship_name: String = "Ship"
@@ -17,6 +19,8 @@ signal soi_changed(old_parent: CelestialBody, new_parent: CelestialBody)
 @export var exhaust_velocity: float = 3500.0  # m/s (Isp * g0)
 @export var dry_mass: float = 10000.0  # kg
 @export var fuel_capacity: float = 20000.0  # kg
+@export var max_health: float = 100.0  # Hull integrity
+var current_health: float = 100.0  # Current hull health
 
 # === State ===
 var orbit_state: OrbitState = null
@@ -61,6 +65,8 @@ var world_position: Vector2:
 
 func _ready() -> void:
 	fuel_mass = fuel_capacity  # Start with full tank
+	current_health = max_health  # Start with full hull
+	_setup_damage_system()
 
 
 func initialize_orbit(parent: CelestialBody, altitude: float, start_angle: float = 0.0) -> void:
@@ -479,8 +485,146 @@ func get_info_string() -> String:
 
 	return "%s\nAlt: %s\nVel: %s\nFuel: %.0f kg\nDelta-v: %s" % [
 		ship_name,
-		OrbitalConstantsClass.format_distance(orbit_state.current_altitude - parent_body.radius),
-		OrbitalConstantsClass.format_velocity(orbit_state.current_speed),
+		OrbitalConstants.format_distance(orbit_state.current_altitude - parent_body.radius),
+		OrbitalConstants.format_velocity(orbit_state.current_speed),
 		fuel_mass,
-		OrbitalConstantsClass.format_velocity(delta_v_remaining)
+		OrbitalConstants.format_velocity(delta_v_remaining)
 	]
+
+
+# === Damage System ===
+var damage_system: ShipDamageSystem = null
+
+func _setup_damage_system() -> void:
+	"""Initialize the damage system"""
+	damage_system = ShipDamageSystem.new()
+	add_child(damage_system)
+	
+	# Connect damage system signals
+	damage_system.ship_destroyed.connect(_on_ship_destroyed)
+	damage_system.damage_taken.connect(_on_damage_taken)
+
+
+func take_damage(amount: float, source: String = "unknown") -> void:
+	"""Handle incoming damage"""
+	if damage_system:
+		damage_system.take_damage(amount, source)
+	else:
+		# Fallback: direct health damage if no system
+		current_health -= amount
+		damage_taken.emit(amount, source)
+		if current_health <= 0:
+			_destroy_ship()
+
+
+func get_health() -> float:
+	"""Return current health"""
+	if damage_system:
+		return damage_system.current_health
+	return current_health
+
+
+func get_max_health() -> float:
+	"""Return max health"""
+	if damage_system:
+		return damage_system.max_health
+	return 100.0
+
+
+func get_health_percent() -> float:
+	"""Return health as percentage"""
+	if damage_system:
+		return damage_system.get_health_percent()
+	if max_health <= 0:
+		return 1.0
+	return current_health / max_health
+
+
+func is_alive() -> bool:
+	"""Check if ship is still operational"""
+	if damage_system:
+		return damage_system.is_alive()
+	return current_health > 0
+
+
+func _on_ship_destroyed() -> void:
+	"""Handle ship destruction"""
+	ship_destroyed.emit()
+	# Stop all movement
+	stop_thrust()
+	is_thrusting = false
+
+
+func _on_damage_taken(amount: float, source: String) -> void:
+	"""Handle damage taken event"""
+	damage_taken.emit(amount, source)
+
+
+func _destroy_ship() -> void:
+	"""Destroy the ship"""
+	if damage_system:
+		damage_system.destroy_ship()
+	else:
+		ship_destroyed.emit()
+		queue_free()
+
+
+# === Stealth System Integration ===
+
+var ship_signature: ShipSignature = null
+
+func _enter_tree() -> void:
+	# Initialize ship signature for stealth system
+	ship_signature = ShipSignature.new()
+	ship_signature.update_thrust_signature(is_thrusting, throttle)
+
+
+func get_thermal_signature() -> float:
+	"""Return thermal signature for detection."""
+	if ship_signature:
+		return ship_signature.thermal_signature
+	# Fallback: base signature when thrusting
+	return 0.3 if is_thrusting else 0.1
+
+
+func get_radar_signature() -> float:
+	"""Return radar cross-section for detection."""
+	if ship_signature:
+		return ship_signature.radar_signature
+	# Fallback: base radar signature
+	return 0.5
+
+
+func get_visual_signature() -> float:
+	"""Return visual signature for detection."""
+	if ship_signature:
+		return ship_signature.visual_signature
+	# Fallback: base visual signature
+	return 0.2
+
+
+func get_signature_data() -> Dictionary:
+	"""Return full signature data for UI."""
+	if ship_signature:
+		return ship_signature.get_signature_data()
+	return {
+		"thermal": get_thermal_signature(),
+		"radar": get_radar_signature(),
+		"visual": get_visual_signature(),
+		"stealth_rating": 1.0 - (get_thermal_signature() + get_radar_signature()) / 2.0,
+		"is_thrusting": is_thrusting,
+		"thrust_level": throttle
+	}
+
+
+func get_stealth_rating() -> float:
+	"""Return stealth rating (0=loud, 1=silent)."""
+	if ship_signature:
+		return ship_signature.get_stealth_rating()
+	return 1.0 - (get_thermal_signature() + get_radar_signature() + get_visual_signature()) / 3.0
+
+
+func _update_signature() -> void:
+	"""Update signature when thrust state changes."""
+	if ship_signature:
+		ship_signature.update_thrust_signature(is_thrusting, throttle)

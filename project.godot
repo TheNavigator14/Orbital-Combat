@@ -20,6 +20,8 @@ config/icon="res://icon.svg"
 OrbitalConstants="*res://scripts/autoload/OrbitalConstants.gd"
 TimeManager="*res://scripts/autoload/TimeManager.gd"
 GameManager="*res://scripts/autoload/GameManager.gd"
+SoundManager="*res://scripts/autoload/SoundManager.gd"
+StealthManager="*res:///systems/stealth/StealthManager.gd"
 
 [display]
 

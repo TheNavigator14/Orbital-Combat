@@ -1,0 +1,50 @@
+[gd_scene load_steps=4 format=3 uid="uid://bq7kxm3l4n2p8"]
+
+[ext_resource type="Script" path="res://scripts/ship/EnemyAIShip.gd" id="1_enemy_ai"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 10.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_2"]
+radius = 15.0
+
+[node name="EnemyShip" type="CharacterBody2D"]
+position = Vector2(150000000, 50000000)
+script = ExtResource("1_enemy_ai")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_1")
+
+[node name="ShipSprite" type="Node2D" parent="."]
+
+[node name="ShipBody" type="Polygon2D" parent="ShipSprite"]
+color = Color(0.85, 0.2, 0.2, 1.0)
+polygon = PackedVector2Array(20, 0, -15, 12, -10, 0, -15, -12)
+
+[node name="DirectionIndicator" type="Line2D" parent="ShipSprite"]
+points = PackedVector2Array(20, 0, 35, 0)
+width = 2.0
+default_color = Color(1, 0.3, 0.3, 1)
+
+[node name="DetectionRange" type="Area2D" parent="."]
+
+[node name="DetectionCollision" type="CollisionShape2D" parent="DetectionRange"]
+shape = SubResource("CircleShape2D_2")
+
+[node name="ThrustIndicator" type="Polygon2D" parent="."]
+visible = false
+position = Vector2(-25, 0)
+polygon = PackedVector2Array(0, -5, -15, 0, 0, 5)
+
+[node name="Label" type="Label" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -50.0
+offset_top = -30.0
+offset_right = 50.0
+offset_bottom = -10.0
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+text = "ENEMY"

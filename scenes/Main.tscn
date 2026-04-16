@@ -1,9 +1,20 @@
-[gd_scene load_steps=5 format=3 uid="uid://main_scene"]
+[gd_scene load_steps=16 format=3 uid="uid://main_scene"]
 
 [ext_resource type="Script" path="res://scripts/Main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/SolarSystem.tscn" id="2_solar"]
 [ext_resource type="Script" path="res://scripts/camera/OrbitalCamera.gd" id="4_camera"]
-[ext_resource type="Script" path="res://scripts/ui/tactical/TacticalDisplay.gd" id="5_tactical"]
+[ext_resource type="Script" path="res://scripts/ui/TacticalDisplay.gd" id="5_tactical"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ManeuverPlanningPanel.tscn" id="6_maneuver"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ShipPanel.tscn" id="7_ship_panel"]
+[ext_resource type="PackedScene" path="res://scenes/ui/SensorModePanel.tscn" id="8_sensor_mode"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ContactDisplayPanel.tscn" id="9_contact_display"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PDCPanel.tscn" id="10_pdc"]
+[ext_resource type="PackedScene" path="res://scenes/ui/SoundPanel.tscn" id="11_sound"]
+[ext_resource type="PackedScene" path="res://scenes/ui/SquadronSpawnerPanel.tscn" id="12_squadron"]
+[ext_resource type="PackedScene" path="res://scenes/ui/MissionPanel.tscn" id="13_mission"]
+[ext_resource type="PackedScene" path="res://scenes/visual/CRTOverlay.tscn" id="14_crt"]
+[ext_resource type="Script" path="res://scripts/visual/VisualEffectsManager.gd" id="15_vfx"]
+[ext_resource type="Script" path="res://scripts/ui/panels/ShipStatusPanel.gd" id="16_ship_status"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
@@ -28,6 +39,20 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("5_tactical")
 
+[node name="ShipPanel" parent="CanvasLayer" instance=ExtResource("7_ship_panel")]
+layout_mode = 2
+offset_left = 300.0
+offset_top = 20.0
+offset_right = 580.0
+offset_bottom = 480.0
+
+[node name="ManeuverPanel" parent="CanvasLayer" instance=ExtResource("6_maneuver")]
+layout_mode = 2
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 320.0
+offset_bottom = 400.0
+
 [node name="ControlsLabel" type="Label" parent="CanvasLayer"]
 anchors_preset = 3
 anchor_left = 1.0
@@ -42,5 +67,67 @@ text = "W/S - Prograde/Retrograde
 A/D - Radial In/Out
 ,/. - Time warp
 Scroll - Zoom
-M - Toggle focus"
+Middle mouse - Pan
+M - Toggle focus
+N - New maneuver node
+Right-click - Execute/Select"
 horizontal_alignment = 2
+
+[node name="SensorModePanel" parent="CanvasLayer" instance=ExtResource("8_sensor_mode")]
+layout_mode = 2
+offset_left = 600.0
+offset_top = 20.0
+offset_right = 880.0
+offset_bottom = 360.0
+
+[node name="ContactDisplayPanel" parent="CanvasLayer" instance=ExtResource("9_contact_display")]
+layout_mode = 2
+offset_left = 600.0
+offset_top = 380.0
+offset_right = 880.0
+offset_bottom = 740.0
+
+[node name="PDCPanel" parent="CanvasLayer" instance=ExtResource("10_pdc")]
+layout_mode = 2
+offset_left = 910.0
+offset_top = 20.0
+offset_right = 1190.0
+offset_bottom = 400.0
+
+[node name="SquadronSpawnerPanel" parent="CanvasLayer" instance=ExtResource("12_squadron")]
+layout_mode = 2
+offset_left = 910.0
+offset_top = 420.0
+offset_right = 1090.0
+offset_bottom = 740.0
+
+[node name="SoundPanel" parent="CanvasLayer" instance=ExtResource("11_sound")]
+layout_mode = 2
+offset_left = 1210.0
+offset_top = 20.0
+offset_right = 1490.0
+offset_bottom = 220.0
+
+[node name="MissionPanel" parent="CanvasLayer" instance=ExtResource("13_mission")]
+layout_mode = 2
+offset_left = 20.0
+offset_top = 420.0
+offset_right = 320.0
+offset_bottom = 740.0
+
+[node name="CRTOverlay" parent="CanvasLayer" instance=ExtResource("14_crt")]
+
+[node name="VisualEffectsManager" type="Node" parent="."]
+script = ExtResource("15_vfx")
+
+[node name="ShipStatusPanel" type="PanelContainer" parent="CanvasLayer"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -280.0
+offset_top = -450.0
+grow_horizontal = 0
+grow_vertical = 0
+script = ExtResource("16_ship_status")

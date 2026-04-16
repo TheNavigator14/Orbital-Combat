@@ -1,0 +1,130 @@
+[gd_scene load_steps=3 format=3 uid="uid://cockpit_customization"]
+
+[ext_resource type="Script" path="res://scripts/ui/panels/CockpitCustomizationPanel.gd" id="1_cockpit"]
+
+[sub_resource type="StyleBoxFlat" id="SubResource_crt_panel"]
+bg_color = Color(0.05, 0.1, 0.05, 0.95)
+border_width_left = 2
+border_width_right = 2
+border_width_top = 2
+border_width_bottom = 2
+border_color = Color(0.1, 0.5, 0.2, 1)
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+
+[node name="CockpitCustomizationPanel" type="Control"]
+custom_minimum_size = Vector2(320, 400)
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_cockpit")
+
+[node name="ToggleButton" type="Button" parent="."]
+layout_mode = 1
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 120.0
+offset_bottom = 30.0
+text = "COCKPIT"
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 0.0
+offset_top = 40.0
+offset_right = 320.0
+offset_bottom = 440.0
+theme_override_styles/panel = SubResource("SubResource_crt_panel")
+visible = false
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="PanelContainer/VBox"]
+layout_mode = 2
+text = "[ SHIP CUSTOMIZATION ]"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/VBox"]
+layout_mode = 2
+
+[node name="CategoryTabs" type="TabContainer" parent="PanelContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Weapons" type="Tabs" parent="PanelContainer/VBox/CategoryTabs"]
+layout_mode = 2
+tab_alignment = 1
+drag_to_rearrange_enabled = true
+
+[node name="Sensors" type="Tabs" parent="PanelContainer/VBox/CategoryTabs"]
+layout_mode = 2
+tab_alignment = 1
+drag_to_rearrange_enabled = true
+
+[node name="Propulsion" type="Tabs" parent="PanelContainer/VBox/CategoryTabs"]
+layout_mode = 2
+tab_alignment = 1
+drag_to_rearrange_enabled = true
+
+[node name="Appearance" type="Tabs" parent="PanelContainer/VBox/CategoryTabs"]
+layout_mode = 2
+tab_alignment = 1
+drag_to_rearrange_enabled = true
+
+[node name="LoadoutSection" type="VBoxContainer" parent="PanelContainer/VBox"]
+layout_mode = 2
+
+[node name="LoadoutLabel" type="Label" parent="PanelContainer/VBox/LoadoutSection"]
+layout_mode = 2
+text = "LOADOUT:"
+
+[node name="LoadoutSelector" type="OptionButton" parent="PanelContainer/VBox/LoadoutSection"]
+layout_mode = 2
+
+[node name="LoadoutDesc" type="Label" parent="PanelContainer/VBox/LoadoutSection"]
+layout_mode = 2
+text = "Balanced combat configuration"
+autowrap_mode = 2
+
+[node name="HSeparator2" type="HSeparator" parent="PanelContainer/VBox"]
+layout_mode = 2
+
+[node name="StatsDisplay" type="VBoxContainer" parent="PanelContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StatsLabel" type="Label" parent="PanelContainer/VBox/StatsDisplay"]
+layout_mode = 2
+text = "[ SPECIFICATIONS ]"
+
+[node name="ScrollStats" type="ScrollContainer" parent="PanelContainer/VBox/StatsDisplay"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StatsContainer" type="VBoxContainer" parent="PanelContainer/VBox/StatsDisplay/ScrollStats"]
+layout_mode = 2
+
+[node name="HSeparator3" type="HSeparator" parent="PanelContainer/VBox"]
+layout_mode = 2
+
+[node name="UpgradesSection" type="VBoxContainer" parent="PanelContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 2
+
+[node name="UpgradesLabel" type="Label" parent="PanelContainer/VBox/UpgradesSection"]
+layout_mode = 2
+text = "[ UPGRADES ]"
+
+[node name="ButtonRow" type="HBoxContainer" parent="PanelContainer/VBox"]
+layout_mode = 2
+alignment = 2
+
+[node name="CloseButton" type="Button" parent="PanelContainer/VBox/ButtonRow"]
+layout_mode = 2
+text = "CLOSE"
+
+[node name="ApplyButton" type="Button" parent="PanelContainer/VBox/ButtonRow"]
+layout_mode = 2
+text = "APPLY"

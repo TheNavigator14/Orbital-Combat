@@ -1,0 +1,111 @@
+[gd_scene load_steps=2 format=3 uid="uid://maneuver_panel_001"]
+
+[ext_resource type="Script" path="res://scripts/ui/maneuver/ManeuverPlanningPanel.gd" id="1_panel"]
+
+[node name="ManeuverPlanningPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("1_panel")
+
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 1
+text = "MANEUVER PLANNER"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BurnTimeContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 1
+
+[node name="BurnTimeLabel" type="Label" parent="VBoxContainer/BurnTimeContainer"]
+layout_mode = 1
+text = "Burn Time (s):"
+
+[node name="BurnTimeInput" type="SpinBox" parent="VBoxContainer/BurnTimeContainer"]
+layout_mode = 1
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 86400.0
+step = 1.0
+value = 60.0
+
+[node name="DeltaVContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 1
+
+[node name="DeltaVLabel" type="Label" parent="VBoxContainer/DeltaVContainer"]
+layout_mode = 1
+text = "Delta-v (m/s):"
+
+[node name="DeltaVInput" type="SpinBox" parent="VBoxContainer/DeltaVContainer"]
+layout_mode = 1
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 10000.0
+step = 10.0
+value = 100.0
+
+[node name="DirectionContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 1
+
+[node name="DirectionLabel" type="Label" parent="VBoxContainer/DirectionContainer"]
+layout_mode = 1
+text = "Direction:"
+
+[node name="DirectionButton" type="OptionButton" parent="VBoxContainer/DirectionContainer"]
+layout_mode = 1
+size_flags_horizontal = 3
+
+[node name="PreviewLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 1
+text = ""
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 1
+text = "Ready"
+horizontal_alignment = 1
+
+[node name="PlanButton" type="Button" parent="VBoxContainer"]
+layout_mode = 1
+size_flags_horizontal = 3
+text = "PLAN MANEUVER"
+
+[node name="ExecuteButton" type="Button" parent="VBoxContainer"]
+layout_mode = 1
+size_flags_horizontal = 3
+text = "EXECUTE"
+disabled = true
+
+[node name="CancelButton" type="Button" parent="VBoxContainer"]
+layout_mode = 1
+size_flags_horizontal = 3
+text = "CANCEL"
+disabled = true
+
+[connection signal="value_changed" from="VBoxContainer/BurnTimeContainer/BurnTimeInput" to="." method="_on_burn_time_input_value_changed"]
+[connection signal="value_changed" from="VBoxContainer/DeltaVContainer/DeltaVInput" to="." method="_on_delta_v_input_value_changed"]
+[connection signal="item_selected" from="VBoxContainer/DirectionContainer/DirectionButton" to="." method="_on_direction_button_item_selected"]
+[connection signal="pressed" from="VBoxContainer/PlanButton" to="." method="_on_plan_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/ExecuteButton" to="." method="_on_execute_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/CancelButton" to="." method="_on_cancel_button_pressed"]

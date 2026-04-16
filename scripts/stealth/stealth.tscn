@@ -1,0 +1,158 @@
+[gd_scene load_steps=2 format=3 uid="uid://stealth_display"]
+
+[ext_resource type="Script" path="res://scripts/stealth/StealthDisplay.gd" id="1_stealth"]
+
+[node name="StealthDisplay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_stealth")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+
+[node name="title" type="Label" parent="VBox"]
+layout_mode = 2
+text = "[ STEALTH SYSTEMS ]"
+horizontal_alignment = 1
+
+[node name="spacer1" type="Control" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 4)
+
+[node name="stealth_state" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="label" type="Label" parent="VBox/stealth_state"]
+layout_mode = 2
+text = "STATE:"
+
+[node name="state_value" type="Label" parent="VBox/stealth_state"]
+layout_mode = 2
+text = "NORMAL"
+width = 80
+
+[node name="stealth_button" type="Button" parent="VBox"]
+layout_mode = 2
+text = "[ ENGAGE SILENT RUNNING ]"
+
+[node name="spacer2" type="Control" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 8)
+
+[node name="sep1" type="HSeparator" parent="VBox"]
+layout_mode = 2
+
+[node name="thermal_panel" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="label" type="Label" parent="VBox/thermal_panel"]
+layout_mode = 2
+text = "THERMAL:"
+
+[node name="thermal_bar" type="TextureProgressBar" parent="VBox/thermal_panel"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 30.0
+
+[node name="radar_panel" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="label" type="Label" parent="VBox/radar_panel"]
+layout_mode = 2
+text = "RADAR:"
+
+[node name="radar_bar" type="TextureProgressBar" parent="VBox/radar_panel"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 50.0
+
+[node name="em_panel" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="label" type="Label" parent="VBox/em_panel"]
+layout_mode = 2
+text = "EM:"
+
+[node name="em_bar" type="TextureProgressBar" parent="VBox/em_panel"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 10.0
+
+[node name="spacer3" type="Control" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 4)
+
+[node name="sep2" type="HSeparator" parent="VBox"]
+layout_mode = 2
+
+[node name="heat_panel" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="label" type="Label" parent="VBox/heat_panel"]
+layout_mode = 2
+text = "HEAT:"
+
+[node name="heat_bar" type="TextureProgressBar" parent="VBox/heat_panel"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 20.0
+
+[node name="heat_temp" type="Label" parent="VBox/heat_panel"]
+layout_mode = 2
+text = "20.0°C"
+width = 70
+
+[node name="spacer4" type="Control" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 4)
+
+[node name="cold_run" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="button" type="Button" parent="VBox/cold_run"]
+layout_mode = 2
+text = "[ COLD RUN ]"
+
+[node name="cool_vent" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="button" type="Button" parent="VBox/cool_vent"]
+layout_mode = 2
+text = "[ COOL VENT ]"
+
+[node name="spacer5" type="Control" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 4)
+
+[node name="sep3" type="HSeparator" parent="VBox"]
+layout_mode = 2
+
+[node name="equipment" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="suite_check" type="CheckBox" parent="VBox/equipment"]
+layout_mode = 2
+text = "STEALTH SUITE"
+
+[node name="coating_check" type="CheckBox" parent="VBox/equipment"]
+layout_mode = 2
+text = "RADAR ABSORBENT"
+
+[node name="ir_suppress_check" type="CheckBox" parent="VBox/equipment"]
+layout_mode = 2
+text = "IR SUPPRESSION"
