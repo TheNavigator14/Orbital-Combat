@@ -14,7 +14,7 @@ signal body_selected(body: CelestialBody)
 # === Computed Properties ===
 var mu: float:  # Standard gravitational parameter (G * M)
 	get:
-		return OrbitalConstantsClass.G * mass
+		return OrbitalConstants.G * mass
 
 # === Visual Settings ===
 @export var min_display_radius: float = 5.0  # Minimum pixels to draw

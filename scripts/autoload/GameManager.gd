@@ -82,11 +82,37 @@ func find_dominant_body(position: Vector2) -> CelestialBody:
 				dominant = body
 				smallest_soi = body.sphere_of_influence
 
-	# If not in any planet's SOI, return the Sun
+	# not (If in any) planet's SOI, return the Sun
 	if dominant == null:
 		dominant = get_sun()
 
 	return dominant
+
+
+func sync_solar_system_to_sensor_manager() -> void:
+	## Sync celestial bodies to SensorManager for line-of-sight occlusion
+	## Called by SensorManager when it needs to check occlusion
+	var sensor_manager = Engine.get_singleton("SensorManager") if Engine.has_singleton("SensorManager") else null
+	if not sensor_manager:
+		# Try to get via node path instead
+		sensor_manager = get_node_or_null("/root/SensorManager")
+	
+	if not sensor_manager or not has_method("get_all_celestial_bodies"):
+		return
+	
+	var bodies = get_all_celestial_bodies()
+	var body_data = []
+	
+	for body in bodies:
+		if body is CelestialBody:
+			var radius = body.get("radius") if body.has("radius") else 0.0
+			body_data.append({
+				"body": body,
+				"radius": radius
+			})
+	
+	if sensor_manager.has_method("set_celestial_bodies"):
+		sensor_manager.set_celestial_bodies(body_data)
 
 
 func toggle_map_view() -> void:

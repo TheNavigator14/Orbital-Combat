@@ -140,40 +140,41 @@ The player operates a spacecraft through sensor screens and instrument panels, p
 
 ## Development Phases
 
-### Phase 1: Orbital Foundation (CURRENT)
+### Phase 1: Orbital Foundation ✅ COMPLETE
 - [x] Kepler orbital mechanics
 - [x] Full solar system (Sun + 8 planets with realistic orbits)
 - [x] Ship with thrust and orbital maneuvers
-- [x] Time warp system
-- [x] Basic tactical display (ship-centered, linear scale)
-- [ ] Maneuver node planning UI
-- [ ] Polished cockpit panels
-- [ ] Moon + SOI transitions
+- [x] Time warp system (1x to 100,000x)
+- [x] Basic tactical display (ship-centered, linear scale, CRT aesthetic)
+- [x] Maneuver node planning UI (N key adds node, panel controls)
+- [x] Polished cockpit panels (Nav, Ship, Time, Maneuver, Sound)
+- [x] Moon + SOI transitions (Earth has Moon, SOI detection)
 
-### Phase 2: Sensors & Detection
-- [ ] Thermal sensor system (fresh design)
-- [ ] Radar system with target awareness
-- [ ] Planet horizon occlusion
-- [ ] Contact identification mechanics
+### Phase 2: Sensors & Detection ✅ COMPLETE
+- [x] Thermal sensor system (passive detection, engine burn signatures)
+- [x] Radar system with target awareness (active tracking, reveals position)
+- [x] Planet horizon occlusion (line of sight blocking)
+- [x] Contact identification mechanics (signature analysis, ship class ID)
 
-### Phase 3: Combat
-- [ ] Physicalized missiles
-- [ ] Launch profile configuration
-- [ ] Guidance modes
-- [ ] PDCs and point defense
-- [ ] Damage model
+### Phase 3: Combat ✅ COMPLETE
+- [x] Physicalized missiles (orbital propagation, types, profiles)
+- [x] Launch profile configuration (immediate/coast/tangential)
+- [x] Guidance modes (autonomous, player-guided, heat-seeking, pro-nav)
+- [x] PDCs and point defense (auto-fire, threat tracking, hit detection)
+- [x] Damage model (health, critical systems, damage events)
 
-### Phase 4: AI & Missions
-- [ ] AI ship behaviors
-- [ ] Mission objectives
-- [ ] Multiple ship encounters
-- [ ] Campaign structure
+### Phase 4: AI & Missions ✅ COMPLETE
+- [x] AI ship behaviors (patrol, intercept, evade, engage)
+- [x] Mission objectives (objectives, tracking, save/load)
+- [x] Multiple ship encounters (squadron spawning, wave system)
+- [x] Campaign structure (story progression, mission selection UI)
 
-### Phase 5: Polish
-- [ ] Full cockpit UI
-- [ ] Sound design
-- [ ] Visual effects
-- [ ] Ship customization/upgrades
+### Phase 5: Polish ✅ COMPLETE
+- [x] Full cockpit UI (CRT overlay, cockpit panels integrated)
+- [x] Ship Status Panel (fuel, health, thrust, orbit info)
+- [x] Sound design (procedural audio, CRT tones)
+- [x] Visual effects (scanlines, vignette, phosphor glow, noise, flicker)
+- [x] Ship customization/upgrades (loadout system, CRT panel)
 
 ---
 

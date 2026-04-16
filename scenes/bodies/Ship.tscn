@@ -9,3 +9,5 @@ max_thrust = 100000.0
 exhaust_velocity = 3500.0
 dry_mass = 10000.0
 fuel_capacity = 20000.0
+
+[node name="PDC" type="Node2D" parent="."]

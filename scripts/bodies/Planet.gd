@@ -89,8 +89,8 @@ func get_info_string() -> String:
 	var base = super.get_info_string()
 	if orbit_state:
 		return base + "\nOrbit: %.2f AU\nPeriod: %.1f days\nSOI: %.0f km" % [
-			orbital_radius / OrbitalConstantsClass.AU,
-			orbit_state.orbital_period / OrbitalConstantsClass.SECONDS_PER_DAY,
+			orbital_radius / OrbitalConstants.AU,
+			orbit_state.orbital_period / OrbitalConstants.SECONDS_PER_DAY,
 			sphere_of_influence / 1000.0
 		]
 	return base

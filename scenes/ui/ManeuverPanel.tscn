@@ -1,0 +1,137 @@
+[gd_scene load_steps=2 format=3 uid="uid://maneuver_panel_scene"]
+
+[ext_resource type="Script" path="res://scripts/ui/panels/ManeuverPanel.gd" id="1_maneuver"]
+
+[node name="ManeuverPanel" type="PanelContainer"]
+custom_minimum_size = Vector2(280, 340)
+offset_right = 280.0
+offset_bottom = 340.0
+script = ExtResource("1_maneuver")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="HeaderLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 1, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "[ MANEUVER NODES ]"
+horizontal_alignment = 1
+
+[node name="NodeHeader" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="NodeNumberLabel" type="Label" parent="VBoxContainer/NodeHeader"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 12
+text = "[ NODE 1 of 1 ]"
+horizontal_alignment = 1
+size_flags_horizontal = 3
+
+[node name="NoManeuverLabel" type="Label" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+text = "NO MANEUVERS PLANNED"
+horizontal_alignment = 1
+
+[node name="NodeContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="NodeTimeContainer" type="HBoxContainer" parent="VBoxContainer/NodeContainer"]
+layout_mode = 2
+
+[node name="TimeLabel" type="Label" parent="VBoxContainer/NodeContainer/NodeTimeContainer"]
+layout_mode = 2
+text = "Time to Burn:"
+size_flags_horizontal = 3
+
+[node name="TimeToLabel" type="Label" parent="VBoxContainer/NodeContainer/NodeTimeContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+text = "T-00:00"
+
+[node name="BurnTimeContainer" type="HBoxContainer" parent="VBoxContainer/NodeContainer"]
+layout_mode = 2
+
+[node name="BurnTimeLabel" type="Label" parent="VBoxContainer/NodeContainer/BurnTimeContainer"]
+layout_mode = 2
+text = "Burn Duration: ---"
+
+[node name="HSeparator1" type="HSeparator" parent="VBoxContainer/NodeContainer"]
+layout_mode = 2
+
+[node name="DeltaVContainer" type="HBoxContainer" parent="VBoxContainer/NodeContainer"]
+layout_mode = 2
+
+[node name="DeltaVTitle" type="Label" parent="VBoxContainer/NodeContainer/DeltaVContainer"]
+layout_mode = 2
+text = "Delta-V:"
+size_flags_horizontal = 3
+
+[node name="DeltaVLabel" type="Label" parent="VBoxContainer/NodeContainer/DeltaVContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 1, 0.4, 1)
+text = "0 m/s"
+
+[node name="DVComponentsContainer" type="HBoxContainer" parent="VBoxContainer/NodeContainer"]
+layout_mode = 2
+
+[node name="DVComponentsLabel" type="Label" parent="VBoxContainer/NodeContainer/DVComponentsContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 10
+text = "Pro: 0 m/s  Rad: 0 m/s"
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer/NodeContainer"]
+layout_mode = 2
+
+[node name="ResultOrbitLabel" type="Label" parent="VBoxContainer/NodeContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "Result Orbit
+Ap: ---  Pe: ---"
+
+[node name="StatusContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="StatusTitle" type="Label" parent="VBoxContainer/StatusContainer"]
+layout_mode = 2
+text = "Status:"
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer/StatusContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "Pending"
+
+[node name="HSeparator3" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ButtonContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ExecuteButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(80, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = "EXECUTE"
+
+[node name="RemoveButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(60, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = "REMOVE"
+
+[node name="NextNodeButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(80, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = "NEXT (0)"

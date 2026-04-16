@@ -1,0 +1,118 @@
+[gd_scene load_steps=2 format=3 uid="uid://mission_panel_scene"]
+
+[ext_resource type="Script" path="res://scripts/ui/panels/MissionPanel.gd" id="1_mission_panel"]
+
+[node name="MissionPanel" type="PanelContainer"]
+custom_minimum_size = Vector2(300, 500)
+offset_right = 300.0
+offset_bottom = 500.0
+script = ExtResource("1_mission_panel")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MissionNavContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="PrevMissionBtn" type="Button" parent="VBoxContainer/MissionNavContainer"]
+custom_minimum_size = Vector2(40, 28)
+layout_mode = 2
+text = "<"
+
+[node name="MissionNavLabel" type="Label" parent="VBoxContainer/MissionNavContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.2, 1, 0.4, 1)
+text = "[ MISSION SELECT ]"
+horizontal_alignment = 1
+
+[node name="NextMissionBtn" type="Button" parent="VBoxContainer/MissionNavContainer"]
+custom_minimum_size = Vector2(40, 28)
+layout_mode = 2
+text = ">"
+
+[node name="MissionListContainer" type="ScrollContainer" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 140)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="MissionList" type="VBoxContainer" parent="VBoxContainer/MissionListContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="DetailsContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="MissionTitleLabel" type="Label" parent="VBoxContainer/DetailsContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 1, 0.6, 1)
+theme_override_font_sizes/font_size = 14
+text = "[ NO MISSION SELECTED ]"
+horizontal_alignment = 1
+
+[node name="MissionDescriptionLabel" type="Label" parent="VBoxContainer/DetailsContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 1, 0.4, 1)
+text = "Select a mission from the list to view details."
+autowrap_mode = 2
+
+[node name="StatusContainer" type="HBoxContainer" parent="VBoxContainer/DetailsContainer"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer/DetailsContainer/StatusContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
+text = "Status: ---"
+
+[node name="TimeContainer" type="HBoxContainer" parent="VBoxContainer/DetailsContainer"]
+layout_mode = 2
+
+[node name="TimeLabel" type="Label" parent="VBoxContainer/DetailsContainer/TimeContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 1, 0.4, 1)
+text = "Time Limit: ---"
+
+[node name="ObjectivesLabel" type="Label" parent="VBoxContainer/DetailsContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 1, 0.6, 1)
+text = "[ OBJECTIVES ]"
+horizontal_alignment = 1
+
+[node name="ObjectivesContainer" type="VBoxContainer" parent="VBoxContainer/DetailsContainer"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="ButtonContainer" type="HBoxContainer" parent="VBoxContainer/DetailsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StartButton" type="Button" parent="VBoxContainer/DetailsContainer/ButtonContainer"]
+custom_minimum_size = Vector2(100, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.3, 1, 0.4, 1)
+text = "START"
+
+[node name="AbandonButton" type="Button" parent="VBoxContainer/DetailsContainer/ButtonContainer"]
+custom_minimum_size = Vector2(100, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.3, 0.2, 1)
+text = "ABANDON"
+
+[node name="Spacer" type="Control" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="CampaignSummaryLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 1, 0.4, 1)
+text = "Campaign: 0/0 missions"
+horizontal_alignment = 1

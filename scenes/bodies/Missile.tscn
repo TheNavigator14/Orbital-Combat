@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3 uid="uid://missile_scene"]
+
+[ext_resource type="Script" path="res://scripts/combat/Missile.gd" id="1_missile"]
+[ext_resource type="PackedScene" path="res://scenes/bodies/Planet.tscn" id="2_body"]
+
+[node name="Missile" type="Node2D"]
+script = ExtResource("1_missile")
+missile_type = 0
+max_thrust = 50000.0
+exhaust_velocity = 3000.0
+fuel_capacity = 100.0
+warhead_yield = 1.0
+detection_radius = 100.0
+terminal_guidance_range = 50000.0
+
+[node name="Trail" type="Line2D" parent="."]
+points = PackedVector2Array()
+width = 2.0
+default_color = Color(1, 0.3, 0, 0.8)

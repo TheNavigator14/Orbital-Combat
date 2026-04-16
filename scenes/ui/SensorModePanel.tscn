@@ -1,0 +1,137 @@
+[gd_scene load_steps=2 format=3 uid="uid://bv8xmhqk2w5y7"]
+
+[ext_resource type="Script" path="res://scripts/ui/panels/SensorModePanel.gd" id="1_sensor_mode"]
+
+[node name="SensorModePanel" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 280.0
+offset_bottom = 340.0
+script = ExtResource("1_sensor_mode")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+
+[node name="ModeContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ModeLabel" type="Label" parent="VBoxContainer/ModeContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "[ PASSIVE ]"
+horizontal_alignment = 1
+
+[node name="ModeButtons" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="PassiveBtn" type="Button" parent="VBoxContainer/ModeButtons"]
+custom_minimum_size = Vector2(90, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "THERMAL"
+
+[node name="RadarBtn" type="Button" parent="VBoxContainer/ModeButtons"]
+custom_minimum_size = Vector2(90, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "RADAR"
+
+[node name="HSeparator1" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ThermalContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ThermalStatusLabel" type="Label" parent="VBoxContainer/ThermalContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "STATUS: ACTIVE"
+
+[node name="ThermalRangeContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ThermalRangeLabel" type="Label" parent="VBoxContainer/ThermalRangeContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "THERMAL: 500 km"
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="RadarStatusContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="RadarStatusLabel" type="Label" parent="VBoxContainer/RadarStatusContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "STATUS: OFF"
+
+[node name="RadarRangeContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="RadarRangeLabel" type="Label" parent="VBoxContainer/RadarRangeContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "RADAR: 1000 km"
+
+[node name="SweepContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="SweepLabel" type="Label" parent="VBoxContainer/SweepContainer"]
+layout_mode = 2
+text = "SWEEP:"
+
+[node name="SweepIndicator" type="Control" parent="VBoxContainer/SweepContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HSeparator3" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ScanProgressContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ScanLabel" type="Label" parent="VBoxContainer/ScanProgressContainer"]
+layout_mode = 2
+text = "SCAN:"
+
+[node name="ScanProgressBar" type="ProgressBar" parent="VBoxContainer/ScanProgressContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="ContactsContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ContactsLabel" type="Label" parent="VBoxContainer/ContactsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "CONTACTS: 0"
+
+[node name="LockContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="LockStatusLabel" type="Label" parent="VBoxContainer/LockContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "LOCK: ---"
+
+[node name="EmissionWarning" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "EMISSIONS: NONE"
+horizontal_alignment = 1
+
+[node name="EmissionLabel" parent="VBoxContainer" instance=ExtResource("1_sensor_mode")]
+visible = false
+
+[connection signal="pressed" from="VBoxContainer/ModeButtons/PassiveBtn" to="." method="_on_passive_pressed"]
+[connection signal="pressed" from="VBoxContainer/ModeButtons/RadarBtn" to="." method="_on_radar_pressed"]

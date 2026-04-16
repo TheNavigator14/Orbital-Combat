@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://sound_panel_001"]
+
+[ext_resource type="Script" path="res://scripts/ui/panels/SoundPanel.gd" id="1_sound_panel"]
+
+[node name="SoundPanel" type="Control"]
+custom_minimum_size = Vector2(280, 200)
+script = ExtResource("1_sound_panel")

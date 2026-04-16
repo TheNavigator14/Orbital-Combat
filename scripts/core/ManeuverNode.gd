@@ -109,7 +109,7 @@ func get_info_string() -> String:
 
 	return "%sT%s\nDelta-v: %s\nBurn: %.1f s" % [
 		type_label,
-		OrbitalConstantsClass.format_time(execution_time - TimeManager.simulation_time),
-		OrbitalConstantsClass.format_velocity(dv_value),
+		OrbitalConstants.format_time(execution_time - TimeManager.simulation_time),
+		OrbitalConstants.format_velocity(dv_value),
 		burn_duration
 	]

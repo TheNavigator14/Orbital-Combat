@@ -1,0 +1,143 @@
+[gd_scene load_steps=2 format=3 uid="uid://c0x8y2z3w4v5"]
+
+[ext_resource type="Script" path="res://scripts/ui/panels/PDCPanel.gd" id="1_pdc"]
+
+[node name="PDCPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_pdc")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PDCNameLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "[ PDC SYSTEM ]"
+horizontal_alignment = 1
+
+[node name="StatusIndicator" type="ColorRect" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+color = Color(0.2, 1, 0.4, 1)
+
+[node name="StatusContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer/StatusContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OFFLINE"
+
+[node name="TargetContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="TargetLabel" type="Label" parent="VBoxContainer/TargetContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "TARGET: NONE"
+
+[node name="TargetDistanceContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="TargetDistanceLabel" type="Label" parent="VBoxContainer/TargetDistanceContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "DIST: ---"
+
+[node name="TargetVelocityContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="TargetVelocityLabel" type="Label" parent="VBoxContainer/TargetVelocityContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "VEL: ---"
+
+[node name="Separator1" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="TrackedCountContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="TrackedCountLabel" type="Label" parent="VBoxContainer/TrackedCountContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "TRACKED: 0"
+
+[node name="ProjectilesContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ProjectilesLabel" type="Label" parent="VBoxContainer/ProjectilesContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ROUNDS: 0"
+
+[node name="AccuracyContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="AccuracyLabel" type="Label" parent="VBoxContainer/AccuracyContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ACC: 0.0%"
+
+[node name="Separator2" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="RangeContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="RangeLabel" type="Label" parent="VBoxContainer/RangeContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "RANGE: 20 km"
+
+[node name="RotationContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="RotationLabel" type="Label" parent="VBoxContainer/RotationContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "AZI: ---"
+
+[node name="Separator3" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="AutoContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="AutoLabel" type="Label" parent="VBoxContainer/AutoContainer"]
+layout_mode = 2
+text = "AUTO: "
+
+[node name="AutoToggle" type="CheckButton" parent="VBoxContainer/AutoContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+button_pressed = true
+
+[node name="PowerContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="PowerLabel" type="Label" parent="VBoxContainer/PowerContainer"]
+layout_mode = 2
+text = "PWR: "
+
+[node name="PowerToggle" type="CheckButton" parent="VBoxContainer/PowerContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+button_pressed = true
+
+[node name="FireContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="FireButton" type="Button" parent="VBoxContainer/FireContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "[ FIRE ]"
