@@ -403,3 +403,92 @@ static func get_available_goals() -> Array[Goal]:
 		Goal.RAISE_PERIAPSIS,
 		Goal.LOWER_PERIAPSIS,
 	]
+
+
+# === Immediate Transfer Planning ===
+
+static func plan_immediate_transfer(ship: Node, target: Planet, transfer_info: Dictionary) -> ManeuverPlan:
+	## Plan a transfer using pre-calculated immediate transfer info
+	## transfer_info comes from TransferCalculator.calculate_immediate_transfer()
+	var plan = ManeuverPlan.new()
+	plan.goal = Goal.TRANSFER_TO_PLANET
+
+	if ship == null or target == null or transfer_info.is_empty():
+		plan.error_message = "Invalid ship, target, or transfer info"
+		return plan
+
+	var ship_orbit = ship.orbit_state as OrbitState
+	if ship_orbit == null:
+		plan.error_message = "Ship has no orbit state"
+		return plan
+
+	var departure_time = transfer_info.get("departure_time", TimeManager.simulation_time + 60.0)
+	var is_patched_conic = transfer_info.get("is_patched_conic", false)
+
+	if is_patched_conic:
+		# Patched conic transfer - escape burn from planetary orbit
+		var patched = transfer_info.get("patched_conic") as TransferCalculator.PatchedConicTransfer
+		var escape_dv_mag = transfer_info.get("escape_dv", 0.0)
+
+		# Get state at departure time
+		var state_at_burn = ship_orbit.get_state_at_time(departure_time)
+		var prograde = OrbitalMechanics.get_prograde_direction(state_at_burn.velocity)
+
+		# Escape burn is prograde
+		var escape_dv = prograde * escape_dv_mag
+		var escape_node = ship.plan_maneuver(departure_time, escape_dv)
+		escape_node.burn_type = "ESCAPE"
+		plan.add_maneuver(escape_node)
+
+		# Capture burn will be created on SOI entry
+		var capture_dv_mag = transfer_info.get("capture_dv", 0.0)
+		var arrival_time = departure_time + transfer_info.get("transfer_time", 0.0)
+
+		var capture_node = ManeuverNode.new()
+		capture_node.execution_time = arrival_time
+		capture_node.burn_type = "CAPTURE"
+		capture_node.is_pending_capture = true
+		capture_node.target_planet = target
+		capture_node.expected_dv_magnitude = capture_dv_mag
+		capture_node.delta_v = Vector2.LEFT * capture_dv_mag  # Placeholder
+		plan.maneuvers.append(capture_node)
+
+		plan.total_delta_v = escape_dv_mag + capture_dv_mag
+		plan.description = "Transfer to %s" % target.body_name
+
+	else:
+		# Heliocentric transfer
+		var departure_dv_mag = transfer_info.get("departure_dv", 0.0)
+		var arrival_dv_mag = transfer_info.get("arrival_dv", 0.0)
+		var transfer_time = transfer_info.get("transfer_time", 0.0)
+
+		# Get state at departure
+		var state_at_burn = ship_orbit.get_state_at_time(departure_time)
+		var prograde = OrbitalMechanics.get_prograde_direction(state_at_burn.velocity)
+
+		# Determine direction based on inner/outer planet
+		var ship_radius = ship_orbit.semi_major_axis
+		var target_radius = target.orbital_radius
+		var is_outward = target_radius > ship_radius
+
+		# Departure burn
+		var departure_dv = prograde * departure_dv_mag if is_outward else -prograde * departure_dv_mag
+		var departure_node = ship.plan_maneuver(departure_time, departure_dv)
+		plan.add_maneuver(departure_node)
+
+		# Arrival burn
+		var arrival_time = departure_time + transfer_time
+		if departure_node.resulting_orbit:
+			var arrival_state = departure_node.resulting_orbit.get_state_at_time(arrival_time)
+			var arrival_prograde = OrbitalMechanics.get_prograde_direction(arrival_state.velocity)
+			var arrival_dv = arrival_prograde * arrival_dv_mag if is_outward else -arrival_prograde * arrival_dv_mag
+			var arrival_node = ship.plan_maneuver(arrival_time, arrival_dv)
+			plan.add_maneuver(arrival_node)
+
+		plan.total_delta_v = departure_dv_mag + arrival_dv_mag
+		plan.description = "Transfer to %s" % target.body_name
+
+	plan.total_time = transfer_info.get("transfer_time", 0.0)
+	plan.is_valid = true
+
+	return plan

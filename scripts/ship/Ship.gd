@@ -10,10 +10,14 @@ signal orbit_changed()
 signal maneuver_started(node: ManeuverNode)
 signal maneuver_completed(node: ManeuverNode)
 signal soi_changed(old_parent: CelestialBody, new_parent: CelestialBody)
+signal main_engine_toggled(active: bool)
+signal throttle_changed(level: int)
+signal stability_assist_toggled(enabled: bool)
 
 # === Configuration ===
 @export var ship_name: String = "Ship"
-@export var max_thrust: float = 100000.0  # Newtons
+@export var max_thrust: float = 100000.0  # Newtons (main engine)
+@export var rcs_thrust: float = 5000.0  # Newtons (RCS thrusters, much weaker)
 @export var exhaust_velocity: float = 3500.0  # m/s (Isp * g0)
 @export var dry_mass: float = 10000.0  # kg
 @export var fuel_capacity: float = 20000.0  # kg
@@ -23,12 +27,29 @@ var orbit_state: OrbitState = null
 var parent_body: CelestialBody = null
 var fuel_mass: float = 0.0  # Current fuel in kg
 
+# === Ship Rotation ===
+var ship_rotation: float = 0.0  # Radians, 0 = pointing right (+X), world-relative
+var angular_velocity: float = 0.0  # Radians per second
+
+@export var rotation_speed: float = 2.0  # Radians per second at full input
+@export var stability_assist_strength: float = 5.0  # Angular damping rate (rad/s^2)
+var stability_assist_enabled: bool = true
+
 # === Thrust Control ===
-enum ThrustDirection { NONE, PROGRADE, RETROGRADE, RADIAL_IN, RADIAL_OUT, MANUAL }
-var current_thrust_direction: ThrustDirection = ThrustDirection.NONE
-var manual_thrust_vector: Vector2 = Vector2.ZERO
-var throttle: float = 0.0  # 0.0 to 1.0
+var main_engine_active: bool = false  # Toggle for main engine
+var throttle_level: int = 0  # 0-4 (0%, 25%, 50%, 75%, 100%)
 var is_thrusting: bool = false
+var current_thrust_magnitude: float = 0.0  # Actual thrust being applied
+
+# === Input State ===
+var input_state: Dictionary = {
+	"forward": false,
+	"backward": false,
+	"strafe_left": false,
+	"strafe_right": false,
+	"rotate_left": false,
+	"rotate_right": false
+}
 
 # === Maneuver Queue ===
 var planned_maneuvers: Array = []  # Array of ManeuverNode
@@ -44,7 +65,7 @@ var current_acceleration: float:
 	get:
 		if total_mass <= 0:
 			return 0.0
-		return (max_thrust * throttle) / total_mass
+		return current_thrust_magnitude / total_mass
 
 var delta_v_remaining: float:
 	get:
@@ -58,9 +79,20 @@ var world_position: Vector2:
 			return orbit_state.position + parent_body.world_position
 		return Vector2.ZERO
 
+var throttle_percent: float:
+	get:
+		return throttle_level * 25.0
+
 
 func _ready() -> void:
 	fuel_mass = fuel_capacity  # Start with full tank
+	# Initialize rotation to prograde once we have orbit state
+	call_deferred("_initialize_rotation")
+
+
+func _initialize_rotation() -> void:
+	if orbit_state and orbit_state.velocity.length_squared() > 0:
+		ship_rotation = orbit_state.velocity.angle()
 
 
 func initialize_orbit(parent: CelestialBody, altitude: float, start_angle: float = 0.0) -> void:
@@ -73,6 +105,10 @@ func initialize_orbit(parent: CelestialBody, altitude: float, start_angle: float
 	# Initial state vector update
 	orbit_state.update_state_vectors(TimeManager.simulation_time)
 
+	# Set initial rotation to prograde
+	if orbit_state.velocity.length_squared() > 0:
+		ship_rotation = orbit_state.velocity.angle()
+
 	GameManager.register_player_ship(self)
 
 
@@ -80,6 +116,10 @@ func initialize_from_state(parent: CelestialBody, pos: Vector2, vel: Vector2) ->
 	## Initialize ship from position and velocity
 	parent_body = parent
 	orbit_state = OrbitState.create_from_state_vectors(pos, vel, parent.mu, TimeManager.simulation_time)
+
+	# Set initial rotation to prograde
+	if orbit_state.velocity.length_squared() > 0:
+		ship_rotation = orbit_state.velocity.angle()
 
 	GameManager.register_player_ship(self)
 
@@ -92,7 +132,13 @@ func _physics_process(delta: float) -> void:
 	if sim_delta <= 0:
 		return
 
-	if is_thrusting and throttle > 0 and fuel_mass > 0:
+	# Update rotation from Q/E input
+	_update_rotation(sim_delta)
+
+	# Update thrust from input
+	_update_thrust()
+
+	if is_thrusting and current_thrust_magnitude > 0 and fuel_mass > 0:
 		# Numerical integration during thrust
 		_integrate_thrust(sim_delta)
 	else:
@@ -106,12 +152,102 @@ func _physics_process(delta: float) -> void:
 	_check_maneuver_schedule()
 
 
+func _update_rotation(delta: float) -> void:
+	## Update ship rotation based on Q/E input and stability assist
+	var rotation_input: float = 0.0
+	if input_state.rotate_left:
+		rotation_input -= 1.0
+	if input_state.rotate_right:
+		rotation_input += 1.0
+
+	if rotation_input != 0.0:
+		# Direct rotation from input
+		angular_velocity = rotation_input * rotation_speed
+	elif stability_assist_enabled:
+		# Stability assist: damp angular velocity when not commanding rotation
+		angular_velocity = move_toward(angular_velocity, 0.0, stability_assist_strength * delta)
+	# Without stability assist, angular_velocity persists (realistic)
+
+	# Apply rotation
+	ship_rotation += angular_velocity * delta
+
+	# Normalize to [0, TAU)
+	ship_rotation = fmod(ship_rotation + TAU, TAU)
+
+
+func _update_thrust() -> void:
+	## Calculate thrust based on main engine state and RCS input
+	var thrust_vector := Vector2.ZERO
+	var thrust_power: float = 0.0
+
+	if main_engine_active:
+		# Main engine mode: W/S control throttle, thrust is always forward
+		if throttle_level > 0:
+			var forward_dir = Vector2.RIGHT.rotated(ship_rotation)
+			thrust_vector = forward_dir
+			thrust_power = max_thrust * (throttle_level / 4.0)
+		# A/D still work for RCS strafing even with main engine on
+		var strafe_thrust := Vector2.ZERO
+		if input_state.strafe_right:
+			strafe_thrust.y += 1.0
+		if input_state.strafe_left:
+			strafe_thrust.y -= 1.0
+		if strafe_thrust.length_squared() > 0.0:
+			# Add RCS strafe to main engine thrust
+			var strafe_world = strafe_thrust.rotated(ship_rotation) * rcs_thrust
+			if thrust_power > 0:
+				# Combine main engine forward with RCS strafe
+				var main_thrust_vec = thrust_vector * thrust_power
+				var combined = main_thrust_vec + strafe_world
+				thrust_vector = combined.normalized()
+				thrust_power = combined.length()
+			else:
+				thrust_vector = strafe_world.normalized()
+				thrust_power = rcs_thrust
+	else:
+		# RCS mode: WASD for strafing
+		var local_thrust := Vector2.ZERO
+
+		if input_state.forward:
+			local_thrust.x += 1.0
+		if input_state.backward:
+			local_thrust.x -= 1.0
+		if input_state.strafe_right:
+			local_thrust.y += 1.0
+		if input_state.strafe_left:
+			local_thrust.y -= 1.0
+
+		if local_thrust.length_squared() > 0.0:
+			local_thrust = local_thrust.normalized()
+			thrust_vector = local_thrust.rotated(ship_rotation)
+			thrust_power = rcs_thrust
+
+	# Apply thrust
+	if thrust_power > 0 and fuel_mass > 0:
+		current_thrust_magnitude = thrust_power
+		if not is_thrusting:
+			is_thrusting = true
+			# Limit warp during thrust
+			TimeManager.limit_warp(TimeManager.WarpLevel.X100)
+			thrust_started.emit()
+	else:
+		if is_thrusting:
+			is_thrusting = false
+			current_thrust_magnitude = 0.0
+			TimeManager.remove_warp_limit()
+			thrust_ended.emit()
+
+	# Store thrust direction for integration
+	if thrust_power > 0:
+		_current_thrust_direction = thrust_vector
+
+
+var _current_thrust_direction: Vector2 = Vector2.ZERO
+
+
 func _integrate_thrust(delta: float) -> void:
 	## RK4 integration for thrust phase
-	## This is only called when actively thrusting
-
-	# Get thrust direction in world coordinates
-	var thrust_dir = _get_thrust_direction_vector()
+	var thrust_dir = _current_thrust_direction
 	if thrust_dir.length_squared() < 0.1:
 		return
 
@@ -142,7 +278,7 @@ func _integrate_thrust(delta: float) -> void:
 		orbit_state.velocity = result.velocity
 
 		# Consume fuel
-		var mass_flow_rate = (max_thrust * throttle) / exhaust_velocity
+		var mass_flow_rate = current_thrust_magnitude / exhaust_velocity
 		fuel_mass = maxf(0.0, fuel_mass - mass_flow_rate * step)
 
 		if fuel_mass <= 0:
@@ -159,62 +295,54 @@ func _integrate_thrust(delta: float) -> void:
 	orbit_changed.emit()
 
 
-func _get_thrust_direction_vector() -> Vector2:
-	## Get thrust direction as a unit vector in world coordinates
-	match current_thrust_direction:
-		ThrustDirection.NONE:
-			return Vector2.ZERO
-		ThrustDirection.PROGRADE:
-			return orbit_state.get_prograde()
-		ThrustDirection.RETROGRADE:
-			return orbit_state.get_retrograde()
-		ThrustDirection.RADIAL_OUT:
-			return orbit_state.get_radial_out()
-		ThrustDirection.RADIAL_IN:
-			return orbit_state.get_radial_in()
-		ThrustDirection.MANUAL:
-			return manual_thrust_vector.normalized()
-		_:
-			return Vector2.ZERO
+# === Engine Control ===
+
+func toggle_main_engine() -> void:
+	## Toggle main engine on/off
+	main_engine_active = not main_engine_active
+
+	# Clear W/S input state to prevent carryover between modes
+	input_state.forward = false
+	input_state.backward = false
+
+	if main_engine_active and throttle_level == 0:
+		throttle_level = 1  # Start at 25% when turning on
+		throttle_changed.emit(throttle_level)
+	main_engine_toggled.emit(main_engine_active)
+	print("Main engine: %s (Throttle: %d%%)" % ["ON" if main_engine_active else "OFF", throttle_level * 25])
 
 
-# === Thrust Control ===
-
-func start_thrust(direction: ThrustDirection, throttle_level: float = 1.0) -> void:
-	## Begin thrusting in specified direction
-	if fuel_mass <= 0:
-		return
-
-	current_thrust_direction = direction
-	throttle = clampf(throttle_level, 0.0, 1.0)
-	is_thrusting = true
-
-	# Limit time warp during thrust
-	TimeManager.limit_warp(TimeManager.WarpLevel.X100)
-
-	thrust_started.emit()
+func increase_throttle() -> void:
+	## Increase throttle by 25%
+	if main_engine_active and throttle_level < 4:
+		throttle_level += 1
+		throttle_changed.emit(throttle_level)
+		print("Throttle: %d%%" % [throttle_level * 25])
 
 
-func stop_thrust() -> void:
-	## Stop thrusting
-	current_thrust_direction = ThrustDirection.NONE
-	throttle = 0.0
-	is_thrusting = false
+func decrease_throttle() -> void:
+	## Decrease throttle by 25%
+	if main_engine_active and throttle_level > 0:
+		throttle_level -= 1
+		throttle_changed.emit(throttle_level)
+		print("Throttle: %d%%" % [throttle_level * 25])
+		if throttle_level == 0:
+			main_engine_active = false
+			main_engine_toggled.emit(false)
 
-	# Remove warp limit
-	TimeManager.remove_warp_limit()
 
-	thrust_ended.emit()
-
-
-func set_manual_thrust(direction: Vector2, throttle_level: float = 1.0) -> void:
-	## Set manual thrust direction
-	manual_thrust_vector = direction
-	start_thrust(ThrustDirection.MANUAL, throttle_level)
+func toggle_stability_assist() -> void:
+	## Toggle stability assist system
+	stability_assist_enabled = not stability_assist_enabled
+	stability_assist_toggled.emit(stability_assist_enabled)
+	print("SAS: %s" % ["ON" if stability_assist_enabled else "OFF"])
 
 
 func _on_fuel_depleted() -> void:
-	stop_thrust()
+	is_thrusting = false
+	current_thrust_magnitude = 0.0
+	main_engine_active = false
+	TimeManager.remove_warp_limit()
 	fuel_depleted.emit()
 
 
@@ -237,7 +365,6 @@ func _check_soi_transition() -> void:
 				return
 
 	# Case 2: Check if entering a child body's SOI
-	# (e.g., from Sun's SOI into Mars' SOI)
 	var bodies = GameManager.get_all_celestial_bodies()
 	for body in bodies:
 		if body == parent_body:
@@ -301,7 +428,6 @@ func get_heliocentric_velocity() -> Vector2:
 	var vel = orbit_state.velocity
 	var current = parent_body
 
-	# Walk up the hierarchy adding orbital velocities
 	while current is Planet:
 		var planet = current as Planet
 		vel += planet.get_orbital_velocity()
@@ -312,7 +438,7 @@ func get_heliocentric_velocity() -> Vector2:
 
 func get_heliocentric_position() -> Vector2:
 	## Get position in heliocentric (Sun-centered) frame
-	return world_position  # world_position is already heliocentric since Sun is at origin
+	return world_position
 
 
 # === Maneuver Planning ===
@@ -345,7 +471,6 @@ func remove_maneuver(node: ManeuverNode) -> void:
 func _schedule_maneuver_events(node: ManeuverNode) -> void:
 	## Schedule time events for a maneuver
 	var warning_time = node.execution_time - 60.0  # 60s warning
-	var start_time = node.execution_time - node.burn_duration / 2.0  # Start burn early to center it
 
 	if warning_time > TimeManager.simulation_time:
 		TimeManager.schedule_event(
@@ -355,42 +480,29 @@ func _schedule_maneuver_events(node: ManeuverNode) -> void:
 			false
 		)
 
-	if start_time > TimeManager.simulation_time:
-		TimeManager.schedule_event(
-			start_time,
-			"maneuver_start_%d" % node.get_instance_id(),
-			func(): _begin_maneuver_execution(node),
-			true  # Auto-pause at maneuver
-		)
+	# Auto-pause at maneuver time for manual execution
+	TimeManager.schedule_event(
+		node.execution_time,
+		"maneuver_start_%d" % node.get_instance_id(),
+		func(): _on_maneuver_time(node),
+		true  # Auto-pause
+	)
+
+
+func _on_maneuver_time(node: ManeuverNode) -> void:
+	## Called when it's time to execute a maneuver
+	current_maneuver = node
+	print("MANEUVER TIME - Align ship and thrust to execute")
+	# Player must manually align and thrust
 
 
 func _check_maneuver_schedule() -> void:
 	## Check if it's time to execute a maneuver
-	# This is handled by scheduled events now
 	pass
-
-
-func _begin_maneuver_execution(node: ManeuverNode) -> void:
-	## Begin executing a maneuver
-	current_maneuver = node
-	is_executing_maneuver = true
-
-	# Calculate thrust direction from delta-v
-	var frame = orbit_state.get_orbital_frame()
-	var prograde_component = node.delta_v.dot(frame.prograde)
-	var radial_component = node.delta_v.dot(frame.radial_out)
-
-	# For now, use manual thrust in delta-v direction
-	# (A proper autopilot would orient the ship first)
-	set_manual_thrust(node.delta_v, 1.0)
-
-	maneuver_started.emit(node)
 
 
 func complete_maneuver() -> void:
 	## Called when maneuver is complete
-	stop_thrust()
-
 	if current_maneuver:
 		var completed = current_maneuver
 		planned_maneuvers.erase(current_maneuver)
@@ -424,53 +536,96 @@ func plan_hohmann_to_altitude(target_altitude: float) -> Array:
 # === Input Handling ===
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("thrust_prograde"):
-		start_thrust(ThrustDirection.PROGRADE)
-	elif event.is_action_released("thrust_prograde"):
-		if current_thrust_direction == ThrustDirection.PROGRADE:
-			stop_thrust()
+	# Main engine toggle
+	if event.is_action_pressed("toggle_main_engine"):
+		toggle_main_engine()
+		return
 
-	elif event.is_action_pressed("thrust_retrograde"):
-		start_thrust(ThrustDirection.RETROGRADE)
-	elif event.is_action_released("thrust_retrograde"):
-		if current_thrust_direction == ThrustDirection.RETROGRADE:
-			stop_thrust()
+	# Stability assist toggle
+	if event.is_action_pressed("toggle_stability_assist"):
+		toggle_stability_assist()
+		return
 
-	elif event.is_action_pressed("thrust_radial_out"):
-		start_thrust(ThrustDirection.RADIAL_OUT)
-	elif event.is_action_released("thrust_radial_out"):
-		if current_thrust_direction == ThrustDirection.RADIAL_OUT:
-			stop_thrust()
+	# W/S behavior depends on main engine state
+	if main_engine_active:
+		# Main engine on: W/S control throttle
+		if event.is_action_pressed("thrust_prograde"):
+			increase_throttle()
+			return
+		if event.is_action_pressed("thrust_retrograde"):
+			decrease_throttle()
+			return
+	else:
+		# Main engine off: W/S are RCS forward/backward
+		if event.is_action_pressed("thrust_prograde"):
+			input_state.forward = true
+		elif event.is_action_released("thrust_prograde"):
+			input_state.forward = false
 
-	elif event.is_action_pressed("thrust_radial_in"):
-		start_thrust(ThrustDirection.RADIAL_IN)
+		if event.is_action_pressed("thrust_retrograde"):
+			input_state.backward = true
+		elif event.is_action_released("thrust_retrograde"):
+			input_state.backward = false
+
+	# A/D always strafe (RCS)
+	if event.is_action_pressed("thrust_radial_in"):
+		input_state.strafe_left = true
 	elif event.is_action_released("thrust_radial_in"):
-		if current_thrust_direction == ThrustDirection.RADIAL_IN:
-			stop_thrust()
+		input_state.strafe_left = false
+
+	if event.is_action_pressed("thrust_radial_out"):
+		input_state.strafe_right = true
+	elif event.is_action_released("thrust_radial_out"):
+		input_state.strafe_right = false
+
+	# Q/E always rotate
+	if event.is_action_pressed("rotate_left"):
+		input_state.rotate_left = true
+	elif event.is_action_released("rotate_left"):
+		input_state.rotate_left = false
+
+	if event.is_action_pressed("rotate_right"):
+		input_state.rotate_right = true
+	elif event.is_action_released("rotate_right"):
+		input_state.rotate_right = false
 
 
 # === Visualization ===
 
+func get_visual_rotation() -> float:
+	## Get rotation for visual display
+	return ship_rotation
+
+
 func _draw() -> void:
-	# Simple triangle ship icon
-	var size = 10.0
-	var points = PackedVector2Array([
-		Vector2(0, -size),      # Nose
-		Vector2(-size * 0.6, size * 0.6),  # Left
-		Vector2(0, size * 0.3),  # Notch
-		Vector2(size * 0.6, size * 0.6)   # Right
+	# Simple triangle ship icon - rotated based on ship_rotation
+	var size_val = 10.0
+	var draw_rotation = ship_rotation
+
+	# Base points (ship pointing right when rotation = 0)
+	var base_points = PackedVector2Array([
+		Vector2(size_val, 0),                      # Nose (right)
+		Vector2(-size_val * 0.6, -size_val * 0.6), # Top-left
+		Vector2(-size_val * 0.3, 0),               # Notch
+		Vector2(-size_val * 0.6, size_val * 0.6)   # Bottom-left
 	])
+
+	# Rotate all points
+	var points = PackedVector2Array()
+	for point in base_points:
+		points.append(point.rotated(draw_rotation))
 
 	draw_colored_polygon(points, Color.GREEN)
 
 	# Thrust indicator
-	if is_thrusting and throttle > 0:
-		var thrust_length = size * 1.5 * throttle
-		var thrust_dir = _get_thrust_direction_vector()
+	if is_thrusting and current_thrust_magnitude > 0:
+		var thrust_length = size_val * 1.5 * (current_thrust_magnitude / max_thrust)
+		var thrust_dir = _current_thrust_direction
 		if thrust_dir.length_squared() > 0.1:
-			# Rotate thrust indicator
-			var local_thrust = -thrust_dir  # Opposite direction for exhaust
-			draw_line(Vector2.ZERO, local_thrust * thrust_length, Color.ORANGE, 3.0)
+			# Exhaust is opposite to thrust direction
+			var exhaust_dir = -thrust_dir * thrust_length
+			var exhaust_color = Color.ORANGE if main_engine_active else Color.CYAN
+			draw_line(Vector2.ZERO, exhaust_dir, exhaust_color, 3.0 if main_engine_active else 1.5)
 
 
 func get_info_string() -> String:

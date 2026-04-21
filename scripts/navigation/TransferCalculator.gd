@@ -693,3 +693,119 @@ static func _estimate_turn_angle(planet: Planet, closest_approach: float) -> flo
 	var sin_half_delta = 1.0 / turn_param
 
 	return 2.0 * asin(minf(sin_half_delta, 1.0))
+
+
+# === Immediate Transfer (No Window Timing) ===
+
+static func calculate_immediate_transfer(ship: Node, target: Planet) -> Dictionary:
+	## Calculate a transfer departing as soon as possible (next periapsis)
+	## Returns Dictionary with: total_dv, transfer_time, escape_dv, capture_dv, departure_time
+	## This does NOT wait for optimal phase angles - transfers immediately
+
+	if ship == null or target == null:
+		return {}
+
+	var ship_orbit = ship.orbit_state as OrbitState
+	var ship_parent = ship.parent_body as CelestialBody
+
+	if ship_orbit == null or ship_parent == null:
+		return {}
+
+	var current_time = TimeManager.simulation_time
+	var sun = GameManager.get_sun()
+	if sun == null:
+		return {}
+
+	# Determine if ship is in planetary orbit or heliocentric
+	var is_planetary_orbit = ship_parent != sun and ship_parent.body_name != "Sun"
+
+	if is_planetary_orbit:
+		# Ship is orbiting a planet - use patched conic
+		return _calculate_immediate_patched_conic(ship, ship_orbit, ship_parent as Planet, target, current_time)
+	else:
+		# Ship is in heliocentric orbit
+		return _calculate_immediate_heliocentric(ship, ship_orbit, target, sun, current_time)
+
+
+static func _calculate_immediate_patched_conic(ship: Node, ship_orbit: OrbitState,
+		origin_planet: Planet, target: Planet, current_time: float) -> Dictionary:
+	## Calculate immediate transfer from planetary orbit using patched conic
+
+	if origin_planet == target:
+		return {"error": "Already at target"}
+
+	var sun = origin_planet.parent_body
+	if sun == null:
+		return {}
+
+	var sun_mu = sun.mu
+	var r_origin = origin_planet.orbital_radius
+	var r_target = target.orbital_radius
+
+	# Calculate parking orbit altitude
+	var parking_altitude = ship_orbit.semi_major_axis - origin_planet.radius
+
+	# Default target orbit altitude (200 km)
+	var target_altitude = 200.0 * 1000.0
+
+	# Find departure time - next periapsis
+	var time_to_pe = ship_orbit.time_to_periapsis(current_time)
+	var departure_time = current_time + time_to_pe
+	if departure_time < current_time + 60.0:
+		departure_time += ship_orbit.orbital_period
+
+	# Calculate patched conic transfer
+	var patched = calculate_patched_conic_transfer(
+		origin_planet,
+		parking_altitude,
+		target,
+		target_altitude,
+		departure_time
+	)
+
+	# Calculate transfer time (Hohmann half-orbit)
+	var a_transfer = (r_origin + r_target) / 2.0
+	var transfer_time = PI * sqrt(pow(a_transfer, 3) / sun_mu)
+
+	return {
+		"total_dv": patched.total_dv,
+		"escape_dv": patched.escape_dv,
+		"capture_dv": patched.capture_dv,
+		"transfer_time": transfer_time,
+		"departure_time": departure_time,
+		"is_patched_conic": true,
+		"patched_conic": patched,
+		"origin_name": origin_planet.body_name,
+		"target_name": target.body_name
+	}
+
+
+static func _calculate_immediate_heliocentric(ship: Node, ship_orbit: OrbitState,
+		target: Planet, sun: CelestialBody, current_time: float) -> Dictionary:
+	## Calculate immediate transfer for ship already in heliocentric orbit
+
+	var sun_mu = sun.mu
+
+	# Get ship's current orbital radius
+	var ship_radius = ship_orbit.semi_major_axis
+	var r_target = target.orbital_radius
+
+	# Calculate Hohmann transfer
+	var transfer = OrbitalMechanics.hohmann_transfer(ship_radius, r_target, sun_mu)
+
+	# Departure at next periapsis for efficiency
+	var time_to_pe = ship_orbit.time_to_periapsis(current_time)
+	var departure_time = current_time + time_to_pe
+	if departure_time < current_time + 60.0:
+		departure_time += ship_orbit.orbital_period
+
+	return {
+		"total_dv": transfer.total_dv,
+		"departure_dv": abs(transfer.dv1),
+		"arrival_dv": abs(transfer.dv2),
+		"transfer_time": transfer.transfer_time,
+		"departure_time": departure_time,
+		"is_patched_conic": false,
+		"origin_name": "Ship",
+		"target_name": target.body_name
+	}

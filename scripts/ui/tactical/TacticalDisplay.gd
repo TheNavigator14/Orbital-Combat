@@ -27,6 +27,7 @@ var camera: OrbitalCamera
 var maneuver_renderer: ManeuverRenderer
 var maneuver_interaction: ManeuverInteraction
 var navigation_planner: NavigationPlanner
+var controls_panel: ControlsPanel
 
 # === State ===
 var solar_system: Node = null
@@ -58,6 +59,11 @@ func _ready() -> void:
 	navigation_planner.maneuvers_created.connect(_on_maneuvers_created)
 	navigation_planner.closed.connect(_on_navigation_planner_closed)
 
+	# Create controls panel (bottom-right corner)
+	controls_panel = ControlsPanel.new()
+	add_child(controls_panel)
+	_position_controls_panel()
+
 	# Connect to GameManager
 	if GameManager:
 		GameManager.player_ship_changed.connect(_on_player_ship_changed)
@@ -67,10 +73,20 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
 		_update_scale_converter_size()
+		_position_controls_panel()
 
 
 func _update_scale_converter_size() -> void:
 	scale_converter.set_screen_size(size)
+
+
+func _position_controls_panel() -> void:
+	## Position controls panel in bottom-right corner
+	if controls_panel:
+		var panel_width = 150.0
+		var panel_height = 170.0  # Approximate expanded height
+		var margin = 10.0
+		controls_panel.position = Vector2(size.x - panel_width - margin, size.y - panel_height - margin)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -320,13 +336,21 @@ func _draw_ship(ship: Ship) -> void:
 		_draw_offscreen_indicator(ship.ship_name, screen_pos)
 		return
 
-	# Ship icon (triangle)
+	# Ship icon (triangle) - rotated based on mode
 	var ship_size = 8.0
-	var points = PackedVector2Array([
-		screen_pos + Vector2(0, -ship_size),
-		screen_pos + Vector2(-ship_size * 0.6, ship_size * 0.6),
-		screen_pos + Vector2(ship_size * 0.6, ship_size * 0.6)
-	])
+	var rotation = ship.get_visual_rotation()
+
+	# Base points (ship pointing right when rotation = 0)
+	var base_points = [
+		Vector2(ship_size, 0),                      # Nose (right)
+		Vector2(-ship_size * 0.6, -ship_size * 0.6), # Top-left
+		Vector2(-ship_size * 0.6, ship_size * 0.6)  # Bottom-left
+	]
+
+	# Rotate and translate points
+	var points = PackedVector2Array()
+	for p in base_points:
+		points.append(screen_pos + p.rotated(rotation))
 	draw_colored_polygon(points, SHIP_COLOR)
 
 	# Velocity vector
@@ -372,6 +396,23 @@ func _draw_info_panel() -> void:
 	## Draw orbital information panel
 	var panel_pos = Vector2(10, 10)
 	var line_height = 16
+
+	# Engine status (prominent at top)
+	if player_ship:
+		# Main engine status
+		var engine_text = "ENGINE: OFF"
+		var engine_color = Color.GRAY
+		if player_ship.main_engine_active:
+			engine_text = "ENGINE: %d%%" % [player_ship.throttle_level * 25]
+			engine_color = Color.ORANGE
+		draw_string(ThemeDB.fallback_font, panel_pos, engine_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, engine_color)
+		panel_pos.y += line_height
+
+		# SAS status
+		var sas_text = "SAS: ON" if player_ship.stability_assist_enabled else "SAS: OFF"
+		var sas_color = Color.CYAN if player_ship.stability_assist_enabled else Color.GRAY
+		draw_string(ThemeDB.fallback_font, panel_pos, sas_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, sas_color)
+		panel_pos.y += line_height + 4
 
 	# Time
 	draw_string(ThemeDB.fallback_font, panel_pos, "Time: " + TimeManager.get_formatted_time(), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, TEXT_COLOR)

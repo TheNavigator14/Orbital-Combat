@@ -673,3 +673,302 @@ From 400km Earth orbit:
 2. **Activate capture burn on SOI entry** - Listen for soi_changed signal
 3. **Calculate optimal escape timing** - Align periapsis with departure direction
 4. **Test full transfer** - Earth orbit → Mars orbit with time warp
+
+---
+
+## Session 6: Dual Control Mode System
+**Date:** 2026-04-20
+
+### Overview
+Implemented a dual control mode system allowing players to switch between strategic orbital planning and direct tactical ship control. Added on-screen controls reference panel.
+
+### Design Philosophy
+- **Orbital Mode**: Decision-based gameplay through navigation interfaces
+- **Combat Mode**: Direct mechanical control for close engagements at POIs
+- **Manual Toggle**: Player chooses when to switch (Tab key)
+- **Hybrid Physics**: Realistic orbital mechanics with stability assist for rotation
+
+### New Files Created
+
+#### `scripts/ui/ControlsPanel.gd`
+On-screen keybind reference panel:
+- Shows mode-specific controls
+- Collapsible with click on header
+- CRT aesthetic matching tactical display
+- Auto-updates when control mode changes
+
+### Files Modified
+
+#### `scripts/ship/Ship.gd`
+Added complete dual control system:
+
+**New Enums & Properties:**
+```gdscript
+enum ControlMode { ORBITAL, COMBAT }
+var control_mode: ControlMode = ControlMode.ORBITAL
+var ship_rotation: float = 0.0  # World-relative facing
+var angular_velocity: float = 0.0
+var stability_assist_enabled: bool = true
+var combat_input_state: Dictionary  # Tracks held keys
+```
+
+**New Signals:**
+- `control_mode_changed(mode: ControlMode)`
+- `stability_assist_toggled(enabled: bool)`
+
+**New Methods:**
+- `_toggle_control_mode()` - Switch between modes
+- `_enter_combat_mode()` - Lock warp, init rotation to prograde
+- `_enter_orbital_mode()` - Remove warp limit
+- `_update_combat_rotation(delta)` - Apply rotation + SAS damping
+- `_update_combat_thrust()` - Convert facing + WASD to world thrust
+- `_handle_orbital_input(event)` - Route orbital mode keys
+- `_handle_combat_input(event)` - Route combat mode keys
+- `get_visual_rotation()` - Get rotation for rendering
+
+#### `project.godot`
+Added input mappings:
+| Action | Key | Purpose |
+|--------|-----|---------|
+| `toggle_control_mode` | Tab | Switch ORBITAL/COMBAT |
+| `rotate_left` | Q | Rotate CCW |
+| `rotate_right` | E | Rotate CW |
+| `toggle_stability_assist` | T | Toggle rotation damping |
+
+#### `scripts/ui/tactical/TacticalDisplay.gd`
+- Added mode indicator at top of info panel
+- Added SAS status indicator (combat mode only)
+- Updated ship drawing to use rotation
+- Integrated ControlsPanel in bottom-right corner
+
+### Controls Summary
+
+#### Orbital Mode
+| Key | Action |
+|-----|--------|
+| W | Prograde thrust |
+| S | Retrograde thrust |
+| A | Radial-in thrust |
+| D | Radial-out thrust |
+| N | Open navigation planner |
+| ,/. | Time warp |
+| Tab | Switch to Combat mode |
+
+#### Combat Mode
+| Key | Action |
+|-----|--------|
+| W | Thrust forward (ship-relative) |
+| S | Thrust backward |
+| A | Strafe left |
+| D | Strafe right |
+| Q | Rotate left (CCW) |
+| E | Rotate right (CW) |
+| T | Toggle stability assist |
+| Tab | Switch to Orbital mode |
+
+### Technical Details
+
+#### Stability Assist (SAS)
+- Only affects rotation, not linear velocity
+- Uses `move_toward()` for linear damping feel
+- Default strength: 5.0 rad/s² (stops spinning in ~0.4s)
+- Toggleable with T key
+
+#### Combat Rotation
+- World-relative (absolute) - ship faces fixed direction in space
+- Initialized to prograde when entering combat mode
+- Persists across mode switches
+
+#### Mode Switching
+- Stops current thrust on mode change
+- Combat mode locks time warp to 1x
+- Interrupts auto-maneuver execution (stays queued)
+
+### Current State
+- Tab toggles between ORBITAL and COMBAT modes
+- Combat mode: full ship control with W/S/A/D/Q/E
+- SAS dampens rotation when enabled
+- Controls panel shows current keybinds
+- Ship visually rotates based on facing direction
+
+### Next Steps
+1. **Test controls** - Verify RCS and main engine feel
+2. **Add maneuver alignment indicator** - Show where to point for planned burns
+3. **Add RCS thruster visualization** - Show strafe/rotation thrusters firing
+
+---
+
+## Session 6 (Continued): Unified Control Scheme
+**Date:** 2026-04-20
+
+### Overview
+Refactored from dual-mode (Orbital/Combat) system to a unified control scheme with RCS thrusters and toggleable main engine.
+
+### Design Change
+User feedback: Don't separate orbital and combat controls. Instead:
+- Always have direct ship control with rotation
+- Maneuvers are executed manually (warp to time, align, thrust)
+- Two thrust systems: low-power RCS for maneuvering, high-power main engine for burns
+
+### New Control Scheme
+
+| Key | Action |
+|-----|--------|
+| Q/E | Rotate ship left/right |
+| WASD | RCS thrust (when main engine off) |
+| Space | Toggle main engine on/off |
+| Up/Down | Increase/decrease throttle (25% steps) |
+| T | Toggle stability assist (SAS) |
+| N | Open navigation planner |
+| ,/. | Time warp |
+| Scroll | Zoom |
+
+### Technical Changes
+
+#### Ship.gd
+- Removed `ControlMode` enum and dual-mode logic
+- Added `main_engine_active: bool` - toggles main engine
+- Added `throttle_level: int` - 0-4 (0%, 25%, 50%, 75%, 100%)
+- Added `rcs_thrust: float` - weaker thrust for maneuvering (5kN vs 100kN main)
+- RCS uses WASD when main engine is off
+- Main engine thrusts forward at throttle level when on
+- Exhaust color: Orange for main engine, Cyan for RCS
+
+#### project.godot
+- Changed `toggle_control_mode` to `toggle_main_engine` (Space key)
+
+#### TacticalDisplay.gd
+- Removed mode indicator
+- Added engine status: "ENGINE: OFF" or "ENGINE: XX%"
+- Always shows SAS status
+
+#### ControlsPanel.gd
+- Simplified to single set of controls (no mode switching)
+- Shows all keybinds in one list
+
+### Current State
+- Unified control scheme working
+- Q/E rotates ship, WASD uses RCS thrusters
+- Space toggles main engine, Up/Down adjusts throttle
+- Ship always faces a controllable direction
+- Maneuvers require manual alignment and execution
+
+### Next Steps
+1. **Test controls** - Verify feel of RCS vs main engine
+2. **Add maneuver alignment indicator** - Visual guide showing where to point for burns
+3. **Tune thrust values** - Adjust RCS and main engine power for gameplay
+
+---
+
+## Session 6 (Continued): Simplified Maneuver System
+**Date:** 2026-04-20
+
+### Overview
+Simplified the navigation/maneuver system to be more intuitive and educational. Removed complex transfer window timing in favor of preset maneuver buttons and immediate transfers.
+
+### Design Philosophy
+- **Educational approach**: Preset buttons teach players orbital mechanics implicitly
+- **Transfer anytime**: No waiting for optimal phase angles - just pay more delta-v
+- **Clear markers**: Maneuver nodes show where and when to burn, teaching the "why"
+
+### Changes Made
+
+#### `scripts/ui/navigation/NavigationPlanner.gd` - Complete Rewrite
+Replaced complex transfer window system with preset buttons:
+
+**New UI Layout:**
+```
++---------------------------+
+|   NAVIGATION COMPUTER     |
++---------------------------+
+| ORBIT ADJUSTMENTS         |
+| Current: Ap: XXX Pe: XXX  |
+|                           |
+| [Circ @ Ap] [Circ @ Pe]   |
+| [Raise Ap]  [Lower Ap]    |
+| [Raise Pe]  [Lower Pe]    |
++---------------------------+
+| PLANET TRANSFER           |
+| [MER][VEN][EAR][MAR]...   |
+|                           |
+| To: Mars                  |
+| Delta-V: 5.72 km/s        |
+| Travel time: 258 days     |
+|                           |
+| [CREATE TRANSFER]         |
++---------------------------+
+| [CLOSE]                   |
++---------------------------+
+```
+
+**Removed:**
+- Transfer window list and synodic period calculations
+- Phase angle timing requirements
+- Complex window selection UI
+
+**Added:**
+- 6 preset orbit adjustment buttons (±100km increments)
+- Planet target selection as quick buttons
+- Immediate transfer calculation with delta-v display
+- "CREATE TRANSFER" button for transfers
+
+#### `scripts/navigation/TransferCalculator.gd`
+Added immediate transfer function:
+
+```gdscript
+static func calculate_immediate_transfer(ship, target) -> Dictionary
+    ## Calculate transfer departing at next periapsis (no window timing)
+    ## Returns: { total_dv, escape_dv, capture_dv, transfer_time, departure_time }
+```
+
+- Works for both planetary orbit (patched conic) and heliocentric orbit
+- Departs at next periapsis for efficiency
+- Calculates full escape + coast + capture delta-v
+
+#### `scripts/navigation/TrajectoryPlanner.gd`
+Added immediate transfer planning:
+
+```gdscript
+static func plan_immediate_transfer(ship, target, transfer_info) -> ManeuverPlan
+    ## Create maneuver plan from immediate transfer calculation
+```
+
+- Creates ESCAPE burn with prograde direction
+- Creates pending CAPTURE burn for SOI entry
+- Works with existing maneuver system
+
+### User Experience
+
+#### Orbit Adjustments
+1. Press N to open navigation planner
+2. Click "Circularize @ Ap" (or other preset)
+3. Maneuver marker appears on tactical display
+4. Close planner, warp to marker time
+5. Align ship to marker direction
+6. Engage main engine, burn to completion
+
+#### Planet Transfers
+1. Press N to open navigation planner
+2. Click target planet button (e.g., "MAR" for Mars)
+3. See delta-v cost and travel time
+4. Click "CREATE TRANSFER"
+5. Escape maneuver appears at next periapsis
+6. Execute as above, ship escapes to heliocentric orbit
+
+### Technical Notes
+- Preset buttons call existing `TrajectoryPlanner.plan_circularize()`, `plan_change_apoapsis()`, etc.
+- Immediate transfers may use more delta-v than optimal windows (no phase angle timing)
+- All calculations still use realistic orbital mechanics
+
+### Current State
+- Navigation planner uses simple preset buttons
+- Can adjust orbit with one click
+- Can initiate transfers to any planet immediately
+- No waiting for transfer windows
+- Maneuver markers guide player through execution
+
+### Next Steps
+1. **Add maneuver alignment indicator** - Show where to point ship for burns
+2. **Polish maneuver markers** - Show Ap/Pe change preview
+3. **Add custom altitude input** - For specific orbit changes
+4. **Optional: Show "optimal window" comparison** - Educational display of delta-v savings

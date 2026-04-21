@@ -48,6 +48,15 @@ The player operates a spacecraft through sensor screens and instrument panels, p
 - Information must be interpreted, not just displayed
 - Satisfying button presses and system interactions
 
+### 6. Direct Ship Control
+- **Unified control scheme** - always have direct control of the ship
+- **Rotation**: Q/E to rotate, stability assist (SAS) dampens when not commanding
+- **Two thrust systems**:
+  - **RCS Thrusters**: Low-power (5kN), WASD for strafing/maneuvering
+  - **Main Engine**: High-power (100kN), toggle on/off, throttle in 25% increments
+- **Manual maneuver execution**: Plan burns via navigation computer, warp to maneuver time, align ship, engage main engine
+- **Time warp**: Always available, limited during active thrust
+
 ---
 
 ## Scale & Setting
@@ -146,9 +155,14 @@ The player operates a spacecraft through sensor screens and instrument panels, p
 - [x] Ship with thrust and orbital maneuvers
 - [x] Time warp system
 - [x] Basic tactical display (ship-centered, linear scale)
-- [ ] Maneuver node planning UI
+- [x] Navigation planner with preset maneuvers
+- [x] SOI transitions and patched conic transfers
+- [x] Unified control scheme (RCS + Main engine)
+- [x] On-screen controls panel
+- [x] Simplified maneuver system (preset buttons, immediate transfers)
+- [ ] Maneuver alignment indicator
 - [ ] Polished cockpit panels
-- [ ] Moon + SOI transitions
+- [ ] Moon (Earth satellite)
 
 ### Phase 2: Sensors & Detection
 - [ ] Thermal sensor system (fresh design)
